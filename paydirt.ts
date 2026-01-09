@@ -54,12 +54,13 @@ Options:
 
 async function main(): Promise<void> {
   const args = parseArgs(Deno.args, {
-    boolean: ['help', 'version', 'dry-run', 'force'],
+    boolean: ['help', 'version', 'dry-run', 'force', 'background'],
     string: ['task', 'claim'],
     alias: {
       h: 'help',
       v: 'version',
       f: 'force',
+      b: 'background',
     },
   });
 
@@ -110,14 +111,15 @@ async function main(): Promise<void> {
       const role = args._[1] as string;
       if (!role) {
         console.error('Error: Prospect role required');
-        console.error('Usage: paydirt prospect <role> [--task "task"] [--claim <id>]');
+        console.error('Usage: paydirt prospect <role> [--task "task"] [--claim <id>] [--background]');
         Deno.exit(1);
       }
-      prospectCommand({
+      await prospectCommand({
         role,
         task: args.task as string,
         claimId: args.claim as string,
         dryRun: args['dry-run'],
+        background: args.background,
       });
       break;
     }
