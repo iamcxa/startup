@@ -3,5 +3,9 @@
   "version": "0.1.0",
   "description": "Paydirt multi-agent orchestrator with Goldflow execution engine",
   "author": "iamcxa",
-  "homepage": "https://github.com/iamcxa/paydirt"
+  "homepage": "https://github.com/iamcxa/paydirt",
+  "agents": "prospects/**/*.md",
+  "commands": "commands/**/*.md",
+  "skills": "skills/**/*.md",
+  "hooks": "hooks/**/*.yaml"
 }
