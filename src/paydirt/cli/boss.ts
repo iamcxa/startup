@@ -5,6 +5,8 @@
  */
 
 const BOSS_SESSION = 'pd-boss';
+const BOSS_LOG_LABEL = 'pd:camp-boss';
+const BOSS_LOG_TITLE = 'Camp Boss Command Log';
 
 /**
  * Check if Camp Boss daemon is running.
@@ -32,6 +34,46 @@ function getPaydirtBin(): string {
     // Fall back to script
     return `deno run --allow-all ${Deno.cwd()}/paydirt.ts`;
   }
+}
+
+/**
+ * Find or create the Camp Boss command log issue.
+ */
+async function ensureBossLog(): Promise<string | null> {
+  // Try to find existing
+  const findCmd = new Deno.Command('bd', {
+    args: ['list', '--label', BOSS_LOG_LABEL, '--issue-type', 'epic', '--limit', '1'],
+    stdout: 'piped',
+    stderr: 'null',
+  });
+
+  const findResult = await findCmd.output();
+  if (findResult.success) {
+    const output = new TextDecoder().decode(findResult.stdout).trim();
+    if (output) {
+      const match = output.match(/^(\S+)\s+/);
+      if (match) return match[1];
+    }
+  }
+
+  // Create new
+  const createCmd = new Deno.Command('bd', {
+    args: [
+      'create',
+      '--title', BOSS_LOG_TITLE,
+      '--type', 'epic',
+      '--label', BOSS_LOG_LABEL,
+    ],
+    stdout: 'piped',
+    stderr: 'piped',
+  });
+
+  const createResult = await createCmd.output();
+  if (!createResult.success) return null;
+
+  const output = new TextDecoder().decode(createResult.stdout).trim();
+  const match = output.match(/Created issue:\s*(\S+)/);
+  return match ? match[1] : null;
 }
 
 export interface BossOptions {
@@ -62,11 +104,18 @@ async function startDaemon(dryRun?: boolean): Promise<void> {
     return;
   }
 
+  // Ensure boss log exists
+  const bossLogId = await ensureBossLog();
+  if (bossLogId) {
+    console.log(`Boss log: ${bossLogId}`);
+  }
+
   const paydirtBin = getPaydirtBin();
   const projectDir = Deno.cwd();
 
-  // Build command to spawn camp-boss prospect
-  const command = `${paydirtBin} prospect camp-boss --background`;
+  // Build command with boss log claim
+  const claimArg = bossLogId ? ` --claim ${bossLogId}` : '';
+  const command = `${paydirtBin} prospect camp-boss${claimArg} --background`;
 
   if (dryRun) {
     console.log('[DRY RUN] Would create tmux session:');
