@@ -98,3 +98,25 @@ Deno.test('buildClaudeCommand escapes paths with spaces', () => {
   });
   assertStringIncludes(cmd, "'"); // Should have quotes for escaping
 });
+
+Deno.test({
+  name: 'buildClaudeCommand includes PAYDIRT environment variables',
+  fn() {
+    const command = buildClaudeCommand({
+      role: 'trail-boss',
+      claimId: 'pd-test123',
+      caravanName: 'test-caravan',
+      paydirtInstallDir: '/opt/paydirt',
+      userProjectDir: '/home/user/project',
+      prompt: 'Test prompt',
+      paydirtBinPath: '/opt/paydirt/paydirt',
+    });
+
+    assertStringIncludes(command, 'PAYDIRT_CLAIM=');
+    assertStringIncludes(command, 'pd-test123');
+    assertStringIncludes(command, 'PAYDIRT_BIN=');
+    assertStringIncludes(command, '/opt/paydirt/paydirt');
+    assertStringIncludes(command, 'PAYDIRT_PROSPECT=');
+    assertStringIncludes(command, 'trail-boss');
+  },
+});
