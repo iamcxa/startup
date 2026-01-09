@@ -9,6 +9,7 @@ Resume work on an existing Caravan.
 ## Steps
 
 1. If no Caravan ID is provided, list available Caravans:
+
 ```bash
 paydirt survey
 ```
@@ -16,6 +17,7 @@ paydirt survey
 2. Ask the user which Caravan to continue if multiple are available.
 
 3. Resume the Caravan:
+
 ```bash
 paydirt continue <caravan-id>
 ```
@@ -27,6 +29,7 @@ paydirt continue PD-42
 ```
 
 After resuming, display:
+
 ```
 ╭────────────────────────────────────────╮
 │  🚃 CARAVAN RESUMED                    │

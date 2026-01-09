@@ -380,7 +380,9 @@ export function generateMprocsConfig(
   if (statusScriptPath) {
     lines.push(`    shell: "bash ${statusScriptPath}"`);
   } else {
-    lines.push(`    shell: "bash -c 'while true; do clear; echo \\"PAYDIRT BOOMTOWN\\"; date; sleep 2; done'"`);
+    lines.push(
+      `    shell: "bash -c 'while true; do clear; echo \\"PAYDIRT BOOMTOWN\\"; date; sleep 2; done'"`,
+    );
   }
   lines.push('    autorestart: true');
 
@@ -393,7 +395,9 @@ export function generateMprocsConfig(
   if (campBossScriptPath) {
     lines.push(`    shell: "bash ${campBossScriptPath}"`);
   } else {
-    lines.push(`    shell: "bash -c 'while true; do clear; echo \\"CAMP BOSS - Press s to start\\"; read -t 1 -n 1 key; done'"`);
+    lines.push(
+      `    shell: "bash -c 'while true; do clear; echo \\"CAMP BOSS - Press s to start\\"; read -t 1 -n 1 key; done'"`,
+    );
   }
   lines.push('    autorestart: true');
 
@@ -406,7 +410,11 @@ export function generateMprocsConfig(
 
     for (const caravan of caravans) {
       const sessionName = `paydirt-${caravan.id}`;
-      const statusGlyph = caravan.status === 'running' ? '▶' : caravan.status === 'idle' ? '◇' : '■';
+      const statusGlyph = caravan.status === 'running'
+        ? '▶'
+        : caravan.status === 'idle'
+        ? '◇'
+        : '■';
       const paneLabel = caravan.id.substring(0, 18);
 
       lines.push('');
@@ -416,7 +424,9 @@ export function generateMprocsConfig(
       if (scriptPath) {
         lines.push(`    shell: "tmux attach -t ${sessionName} 2>/dev/null || bash ${scriptPath}"`);
       } else {
-        lines.push(`    shell: "tmux attach -t ${sessionName} 2>/dev/null || bash -c 'while true; do clear; echo \\"Caravan: ${caravan.id}\\"; echo \\"Status: ${caravan.status}\\"; read -t 1 -n 1 key; done'"`);
+        lines.push(
+          `    shell: "tmux attach -t ${sessionName} 2>/dev/null || bash -c 'while true; do clear; echo \\"Caravan: ${caravan.id}\\"; echo \\"Status: ${caravan.status}\\"; read -t 1 -n 1 key; done'"`,
+        );
       }
     }
   } else {

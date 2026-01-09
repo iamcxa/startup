@@ -9,11 +9,13 @@ Show the current status of Caravans.
 ## Steps
 
 1. Run this command to get Caravan status:
+
 ```bash
 paydirt survey
 ```
 
 2. Display a summary:
+
 ```
 ╭────────────────────────────────────────╮
 │  🗺️ SURVEY RESULTS                     │

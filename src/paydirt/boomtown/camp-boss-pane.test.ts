@@ -41,8 +41,8 @@ Deno.test('generateCampBossScriptContent includes start and attach controls', ()
     '/agents/camp-boss.md',
     '/project',
   );
-  assertStringIncludes(script, '[s]');  // Start
-  assertStringIncludes(script, '[a]');  // Attach
+  assertStringIncludes(script, '[s]'); // Start
+  assertStringIncludes(script, '[a]'); // Attach
 });
 
 Deno.test('generateCampBossScriptContent includes agent file path', () => {

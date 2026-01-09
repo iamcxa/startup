@@ -12,10 +12,10 @@
 
 import { join } from 'https://deno.land/std@0.208.0/path/mod.ts';
 import {
+  type CaravanStatus,
+  type DashboardCaravanInfo,
   generateMprocsConfig,
   writeMprocsConfig,
-  type DashboardCaravanInfo,
-  type CaravanStatus,
 } from './mprocs.ts';
 import { generateCampBossScriptContent } from './camp-boss-pane.ts';
 
@@ -72,7 +72,9 @@ export async function findPaydirtPath(): Promise<string> {
     }
   }
 
-  throw new Error('paydirt binary not found. Run "deno compile --allow-all --output=paydirt paydirt.ts" first.');
+  throw new Error(
+    'paydirt binary not found. Run "deno compile --allow-all --output=paydirt paydirt.ts" first.',
+  );
 }
 
 /**
@@ -320,6 +322,6 @@ export async function launchBoomtown(): Promise<void> {
 }
 
 // Re-export types and functions for convenience
-export type { DashboardCaravanInfo, CaravanStatus };
+export type { CaravanStatus, DashboardCaravanInfo };
 export { generateMprocsConfig, writeMprocsConfig };
 export { generateCampBossScriptContent };

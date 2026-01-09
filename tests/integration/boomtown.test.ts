@@ -6,26 +6,21 @@
  * Tests verify that components work together correctly and test file generation.
  */
 
+import { assertEquals, assertExists, assertNotEquals, assertStringIncludes } from '@std/assert';
 import {
-  assertEquals,
-  assertExists,
-  assertNotEquals,
-  assertStringIncludes,
-} from '@std/assert';
-import {
+  type DashboardCaravanInfo,
   generateCaravanScriptContent,
   generateMprocsConfig,
   generateStatusScriptContent,
   generateWelcomeScript,
-  type DashboardCaravanInfo,
   writeMprocsConfig,
 } from '../../src/paydirt/boomtown/mprocs.ts';
 import { generateCampBossScriptContent } from '../../src/paydirt/boomtown/camp-boss-pane.ts';
 import {
+  type CaravanInfo,
   mapCaravansToDashboard,
   RELOAD_TRIGGER_FILE,
   requestDashboardReload,
-  type CaravanInfo,
 } from '../../src/paydirt/boomtown/dashboard.ts';
 
 // ============================================================================
@@ -36,7 +31,12 @@ Deno.test('mprocs config includes all required sections', () => {
   const caravans: DashboardCaravanInfo[] = [
     { id: 'pd-001', name: 'Test Caravan', status: 'running' },
   ];
-  const config = generateMprocsConfig(caravans, '/tmp/status.sh', new Map([['pd-001', '/tmp/caravan.sh']]), '/tmp/camp-boss.sh');
+  const config = generateMprocsConfig(
+    caravans,
+    '/tmp/status.sh',
+    new Map([['pd-001', '/tmp/caravan.sh']]),
+    '/tmp/camp-boss.sh',
+  );
 
   // Required sections as per spec
   // Note: PAYDIRT is rendered as ASCII art banner (block letters)
@@ -120,7 +120,12 @@ Deno.test('Control Room status script includes system panels', () => {
 // ============================================================================
 
 Deno.test('Caravan pane script includes correct session name', () => {
-  const script = generateCaravanScriptContent('pd-abc123', 'Test Caravan', 'running', '/usr/bin/paydirt');
+  const script = generateCaravanScriptContent(
+    'pd-abc123',
+    'Test Caravan',
+    'running',
+    '/usr/bin/paydirt',
+  );
 
   assertStringIncludes(script, 'SESSION_NAME="paydirt-pd-abc123"');
   assertStringIncludes(script, 'CARAVAN_ID="pd-abc123"');
@@ -128,7 +133,12 @@ Deno.test('Caravan pane script includes correct session name', () => {
 
 Deno.test('Caravan pane script includes status indicator', () => {
   // Test running status
-  const runningScript = generateCaravanScriptContent('pd-001', 'Running', 'running', '/bin/paydirt');
+  const runningScript = generateCaravanScriptContent(
+    'pd-001',
+    'Running',
+    'running',
+    '/bin/paydirt',
+  );
   assertStringIncludes(runningScript, '▶');
   assertStringIncludes(runningScript, 'RUNNING');
 

@@ -1,12 +1,12 @@
 // src/paydirt/boomtown/dashboard.test.ts
 import { assertEquals, assertStringIncludes } from '@std/assert';
 import {
+  type CaravanInfo,
+  findPaydirtPath,
   mapCaravanStatus,
   mapCaravansToDashboard,
-  requestDashboardReload,
   RELOAD_TRIGGER_FILE,
-  findPaydirtPath,
-  type CaravanInfo,
+  requestDashboardReload,
 } from './dashboard.ts';
 
 // ========================================================================

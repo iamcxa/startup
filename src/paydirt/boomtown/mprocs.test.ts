@@ -1,11 +1,11 @@
 // src/paydirt/boomtown/mprocs.test.ts
 import { assertStringIncludes } from '@std/assert';
 import {
+  type DashboardCaravanInfo,
+  generateCaravanScriptContent,
   generateMprocsConfig,
   generateStatusScriptContent,
-  generateCaravanScriptContent,
   generateWelcomeScript,
-  type DashboardCaravanInfo,
 } from './mprocs.ts';
 
 // ========================================================================
@@ -117,15 +117,20 @@ Deno.test('generateMprocsConfig uses custom script paths when provided', () => {
 // ========================================================================
 
 Deno.test('generateCaravanScriptContent includes caravan info', () => {
-  const script = generateCaravanScriptContent('pd-001', 'Test Caravan', 'running', '/usr/local/bin/paydirt');
+  const script = generateCaravanScriptContent(
+    'pd-001',
+    'Test Caravan',
+    'running',
+    '/usr/local/bin/paydirt',
+  );
   assertStringIncludes(script, 'pd-001');
   assertStringIncludes(script, 'Test Caravan');
 });
 
 Deno.test('generateCaravanScriptContent includes start and attach controls', () => {
   const script = generateCaravanScriptContent('pd-001', 'Test', 'idle', '/bin/paydirt');
-  assertStringIncludes(script, '[s]');  // Start
-  assertStringIncludes(script, '[a]');  // Attach
+  assertStringIncludes(script, '[s]'); // Start
+  assertStringIncludes(script, '[a]'); // Attach
 });
 
 Deno.test('generateCaravanScriptContent uses correct tmux session name', () => {

@@ -9,24 +9,24 @@
 
 // Dashboard launcher and hot-reload
 export {
+  type CaravanInfo,
+  findPaydirtPath,
   launchBoomtown,
-  requestDashboardReload,
   mapCaravanStatus,
   mapCaravansToDashboard,
-  findPaydirtPath,
   RELOAD_TRIGGER_FILE,
-  type CaravanInfo,
+  requestDashboardReload,
 } from './dashboard.ts';
 
 // mprocs configuration
 export {
-  generateMprocsConfig,
-  writeMprocsConfig,
-  generateStatusScriptContent,
-  generateCaravanScriptContent,
-  generateWelcomeScript,
-  type DashboardCaravanInfo,
   type CaravanStatus,
+  type DashboardCaravanInfo,
+  generateCaravanScriptContent,
+  generateMprocsConfig,
+  generateStatusScriptContent,
+  generateWelcomeScript,
+  writeMprocsConfig,
 } from './mprocs.ts';
 
 // Camp Boss pane

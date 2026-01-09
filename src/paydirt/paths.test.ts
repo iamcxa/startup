@@ -1,11 +1,11 @@
 // src/paydirt/paths.test.ts
 import { assertEquals, assertMatch } from '@std/assert';
 import {
-  getPaydirtInstallDir,
-  getUserProjectDir,
   getPaydirtBinPath,
-  getProspectsDir,
+  getPaydirtInstallDir,
   getProspectPath,
+  getProspectsDir,
+  getUserProjectDir,
 } from './paths.ts';
 
 Deno.test('getPaydirtInstallDir returns paydirt root directory', () => {
