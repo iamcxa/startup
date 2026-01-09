@@ -1,0 +1,7 @@
+{
+  "name": "paydirt",
+  "version": "0.1.0",
+  "description": "Paydirt multi-agent orchestrator with Goldflow execution engine",
+  "author": "iamcxa",
+  "homepage": "https://github.com/iamcxa/paydirt"
+}
