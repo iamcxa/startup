@@ -12,6 +12,8 @@
  * Reference: gastown_b/src/dashboard/mprocs.ts (Soviet/Industrial theme)
  */
 
+import { generateCampBossScriptContent } from './camp-boss-pane.ts';
+
 /**
  * Status of a Caravan for dashboard display.
  */
@@ -466,14 +468,24 @@ export function generateMprocsConfig(
 export async function writeMprocsConfig(
   caravans: DashboardCaravanInfo[],
   paydirtPath: string,
-  _projectRoot?: string,
+  projectRoot?: string,
 ): Promise<string> {
   const tempDir = await Deno.makeTempDir({ prefix: 'paydirt-boomtown-' });
+  const effectiveProjectRoot = projectRoot || Deno.cwd();
 
   // Write Control Room status script
   const statusScriptPath = `${tempDir}/control-room.sh`;
   await Deno.writeTextFile(statusScriptPath, generateStatusScriptContent());
   await Deno.chmod(statusScriptPath, 0o755);
+
+  // Write Camp Boss script
+  const campBossScriptPath = `${tempDir}/camp-boss.sh`;
+  const campBossAgentPath = `${effectiveProjectRoot}/prospects/camp-boss.md`;
+  await Deno.writeTextFile(
+    campBossScriptPath,
+    generateCampBossScriptContent(paydirtPath, campBossAgentPath, effectiveProjectRoot),
+  );
+  await Deno.chmod(campBossScriptPath, 0o755);
 
   // Write Caravan detail scripts
   const caravanScriptPaths = new Map<string, string>();
@@ -503,7 +515,7 @@ export async function writeMprocsConfig(
     caravans,
     statusScriptPath,
     caravanScriptPaths,
-    undefined, // campBossScriptPath - not yet implemented
+    campBossScriptPath,
     welcomeScriptPath,
   );
   const configPath = `${tempDir}/mprocs.yaml`;

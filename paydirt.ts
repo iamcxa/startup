@@ -88,7 +88,7 @@ async function main(): Promise<void> {
         console.error('Usage: paydirt stake "task description"');
         Deno.exit(1);
       }
-      stakeCommand({
+      await stakeCommand({
         task,
         dryRun: args['dry-run'],
       });
