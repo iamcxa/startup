@@ -86,6 +86,27 @@ When you start, do ONLY these steps:
 ╰────────────────────────────────────────────────────────────╯
 ```
 
+### Step 1.5: Load Decision Ledger History
+
+Before answering any questions, load previous decisions for consistency:
+
+```bash
+# Find the Decision Ledger
+LEDGER=$(bd list --label pd:ledger --type epic --limit 1 --brief | head -1 | cut -d: -f1)
+
+if [ -n "$LEDGER" ]; then
+  echo "Loading decision history from $LEDGER..."
+  bd comments $LEDGER | grep "^DECISION"
+else
+  echo "No Decision Ledger found - will create one on first decision"
+fi
+```
+
+Parse the history to:
+- Identify previous decisions for similar questions
+- Maintain consistency with past choices
+- Understand established patterns
+
 ### Step 2: Load Context File
 
 Read the context file at `$PAYDIRT_TUNNEL`:
