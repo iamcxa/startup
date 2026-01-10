@@ -147,3 +147,42 @@ Deno.test({
     assertStringIncludes(result.stdout, 'pd-other');
   },
 });
+
+Deno.test({
+  name: 'hook spawns PM for pd:decision issue creation',
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
+    // Test that the hook detects bd create with pd:decision label
+    // and would spawn PM agent
+    const env = {
+      PAYDIRT_BIN: 'echo', // Use echo to capture what would be executed
+      PAYDIRT_CLAIM: 'pd-test123',
+      PAYDIRT_HOOK_SYNC: '1',
+      CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: Which auth?" --label pd:decision',
+      CLAUDE_TOOL_OUTPUT: 'Created issue: pd-dec456',
+    };
+
+    const hookPath = Deno.cwd() + '/hooks/post-tool-use.sh';
+    const cmd = new Deno.Command('bash', {
+      args: [hookPath],
+      stdin: 'piped',
+      stdout: 'piped',
+      stderr: 'piped',
+      env,
+    });
+
+    const process = cmd.spawn();
+    const writer = process.stdin.getWriter();
+    await writer.write(new TextEncoder().encode(''));
+    await writer.close();
+
+    const { stdout } = await process.output();
+    const output = new TextDecoder().decode(stdout);
+
+    // Verify it would spawn PM with correct arguments
+    assertEquals(output.includes('prospect'), true, 'Should call prospect command');
+    assertEquals(output.includes('pm'), true, 'Should spawn PM agent');
+    assertEquals(output.includes('pd-dec456'), true, 'Should use decision issue ID');
+  },
+});

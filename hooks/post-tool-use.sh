@@ -32,6 +32,8 @@ run_cmd() {
 
 # --- Decision Issue Detection ---
 # Detect bd create with pd:decision label -> spawn PM
+# Note: This matches any label starting with 'pd:decision' (e.g., pd:decision-archive)
+# This is acceptable for POC as label naming is controlled
 if echo "$TOOL_INPUT" | grep -qE "bd create.*--label[= ].*pd:decision"; then
   # Extract issue ID from tool output (CLAUDE_TOOL_OUTPUT)
   TOOL_OUTPUT="${CLAUDE_TOOL_OUTPUT:-}"
