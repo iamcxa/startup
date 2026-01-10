@@ -122,10 +122,10 @@ print_caravan_stats() {
 print_controls_panel() {
   echo ""
   echo -e "\${FG} ╔══════════════════════════════════════════════════════════════════════╗"
-  echo -e " ║  \${AMBER}◆ MPROCS CONTROLS\${FG}                                                    ║"
+  echo -e " ║  \${AMBER}◆ ZELLIJ CONTROLS\${FG}                                                    ║"
   echo -e " ╠════════════════════╦════════════════════╦════════════════════════════╣"
-  echo -e " ║  [C-a] Focus List  ║  [r] Restart Proc  ║  [q] Exit Boomtown         ║"
-  echo -e " ║  [j/k] Navigate    ║  [x] Stop Process  ║  [z] Zoom Terminal         ║"
+  echo -e " ║  [C-p] Pane Mode   ║  [C-t] Tab Mode    ║  [C-q] Exit Boomtown       ║"
+  echo -e " ║  [←↑↓→] Navigate   ║  [n] New Tab       ║  [x] Close Tab             ║"
   echo -e " ╚════════════════════╩════════════════════╩════════════════════════════╝"
   echo -e "\${RESET}"
 }
