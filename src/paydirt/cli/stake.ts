@@ -75,13 +75,75 @@ async function notifyNewCaravan(claimId: string, task: string): Promise<void> {
   }
 }
 
+/**
+ * Create a caravan issue in beads (bd).
+ * Returns the issue ID if successful, null otherwise.
+ */
+async function createCaravanIssue(task: string): Promise<string | null> {
+  const title = task.length > 60 ? task.slice(0, 57) + '...' : task;
+
+  const cmd = new Deno.Command('bd', {
+    args: [
+      'create',
+      '--title', title,
+      '--type', 'task',
+      '--label', 'pd:caravan',
+      '--description', `Caravan task: ${task}`,
+    ],
+    stdout: 'piped',
+    stderr: 'piped',
+  });
+
+  const result = await cmd.output();
+  if (!result.success) {
+    const stderr = new TextDecoder().decode(result.stderr);
+    console.error('Failed to create caravan issue:', stderr);
+    return null;
+  }
+
+  // Parse the output to get the issue ID
+  // Output format: "Created issue: pd-xxx"
+  const output = new TextDecoder().decode(result.stdout).trim();
+  const match = output.match(/Created issue:\s*(\S+)/);
+  return match ? match[1] : null;
+}
+
 export async function stakeCommand(options: StakeOptions): Promise<void> {
   const { task, primeMode: _primeMode, tunnelPath, dryRun } = options;
 
   console.log(`Staking claim for: "${task}"`);
 
-  // Generate Caravan ID and name
-  const claimId = `pd-${Date.now().toString(36)}`;
+  if (dryRun) {
+    const mockId = `pd-${Date.now().toString(36)}`;
+    const caravanName = task.slice(0, 30).replace(/\s+/g, '-').toLowerCase();
+    const sessionName = `paydirt-${mockId}`;
+    const paydirtInstallDir = getPaydirtInstallDir();
+    const userProjectDir = getUserProjectDir();
+    const command = buildClaudeCommand({
+      role: 'trail-boss',
+      claimId: mockId,
+      caravanName,
+      paydirtInstallDir,
+      userProjectDir,
+      prompt: `You are the Trail Boss coordinating this Caravan. The task is: "${task}".`,
+      tunnelPath,
+      paydirtBinPath: getPaydirtBinPath(),
+    });
+    console.log('\n[DRY RUN] Would execute:');
+    console.log(command);
+    console.log(`\nSession name: ${sessionName}`);
+    return;
+  }
+
+  // Create caravan issue in beads
+  console.log('Creating caravan issue...');
+  const claimId = await createCaravanIssue(task);
+  if (!claimId) {
+    console.error('✗ Failed to create caravan issue in beads');
+    Deno.exit(1);
+  }
+  console.log(`✓ Created caravan: ${claimId}`);
+
   const caravanName = task.slice(0, 30).replace(/\s+/g, '-').toLowerCase();
   const sessionName = `paydirt-${claimId}`;
 
@@ -99,13 +161,6 @@ export async function stakeCommand(options: StakeOptions): Promise<void> {
     tunnelPath,
     paydirtBinPath: getPaydirtBinPath(),
   });
-
-  if (dryRun) {
-    console.log('\n[DRY RUN] Would execute:');
-    console.log(command);
-    console.log(`\nSession name: ${sessionName}`);
-    return;
-  }
 
   // Check if session already exists
   if (await sessionExists(sessionName)) {

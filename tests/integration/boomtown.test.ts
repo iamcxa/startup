@@ -188,7 +188,7 @@ Deno.test('Camp Boss script includes Claude Code launch', () => {
 
   assertStringIncludes(script, 'claude');
   assertStringIncludes(script, '--agent');
-  assertStringIncludes(script, 'PAYDIRT_ROLE=camp-boss');
+  assertStringIncludes(script, 'PAYDIRT_PROSPECT=camp-boss');
 });
 
 // ============================================================================
