@@ -1,6 +1,7 @@
 // src/paydirt/cli/stake.ts
 import { getPaydirtBinPath, getPaydirtInstallDir, getUserProjectDir } from '../paths.ts';
 import { buildClaudeCommand } from '../claude/command.ts';
+import { addCaravanTab, BOOMTOWN_SESSION, sessionExists as zellijSessionExists } from '../boomtown/zellij.ts';
 
 export interface StakeOptions {
   task: string;
@@ -181,6 +182,14 @@ export async function stakeCommand(options: StakeOptions): Promise<void> {
 
   // Notify Boomtown dashboard
   await notifyNewCaravan(claimId, task);
+
+  // Add caravan tab to Boomtown (zellij) if running
+  if (await zellijSessionExists(BOOMTOWN_SESSION)) {
+    const added = await addCaravanTab(claimId, caravanName);
+    if (added) {
+      console.log(`✓ Added to Boomtown dashboard`);
+    }
+  }
 
   console.log(`✓ Caravan started: ${claimId}`);
   console.log(`\n▶ Attaching to session...`);
