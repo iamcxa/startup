@@ -15,15 +15,17 @@ set -e
 # Only process in Paydirt context
 [ -z "$PAYDIRT_BIN" ] && exit 0
 
-# Read tool output from stdin
-TOOL_OUTPUT=$(cat)
+# Read tool output from stdin (we don't use it, but must consume it)
+cat > /dev/null
 
-# Check if this is a bd comments add command
-echo "$TOOL_OUTPUT" | grep -q "bd comments add" || exit 0
+# Check if this is a bd comments add command using CLAUDE_TOOL_INPUT
+# CLAUDE_TOOL_INPUT contains the Bash command that was executed
+TOOL_INPUT="${CLAUDE_TOOL_INPUT:-}"
+echo "$TOOL_INPUT" | grep -q "bd comments add" || exit 0
 
 # Extract the comment content using sed (portable)
 # Handles: bd comments add <id> "CONTENT"
-COMMENT=$(echo "$TOOL_OUTPUT" | sed -n 's/.*bd comments add [^ ]* "\([^"]*\)".*/\1/p' | head -1)
+COMMENT=$(echo "$TOOL_INPUT" | sed -n 's/.*bd comments add [^ ]* "\([^"]*\)".*/\1/p' | head -1)
 [ -z "$COMMENT" ] && exit 0
 
 # Get prefix (everything before first colon)

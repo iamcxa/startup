@@ -7,21 +7,27 @@
 import { assertEquals, assertStringIncludes } from '@std/assert';
 
 async function runHookWithInput(
-  input: string,
+  toolInput: string,
   env: Record<string, string>,
 ): Promise<{ stdout: string; stderr: string; success: boolean }> {
+  // CLAUDE_TOOL_INPUT contains the bash command that was executed
   const cmd = new Deno.Command('bash', {
     args: ['hooks/post-tool-use.sh'],
     stdin: 'piped',
     stdout: 'piped',
     stderr: 'piped',
-    env: { ...Deno.env.toObject(), ...env, PAYDIRT_HOOK_SYNC: '1' },
+    env: {
+      ...Deno.env.toObject(),
+      ...env,
+      PAYDIRT_HOOK_SYNC: '1',
+      CLAUDE_TOOL_INPUT: toolInput,
+    },
     cwd: Deno.cwd(),
   });
 
   const child = cmd.spawn();
+  // Hook consumes stdin but doesn't use it - send empty
   const writer = child.stdin.getWriter();
-  await writer.write(new TextEncoder().encode(input));
   await writer.close();
 
   const { stdout, stderr, success } = await child.output();
