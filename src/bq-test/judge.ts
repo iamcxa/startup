@@ -45,7 +45,7 @@ export async function evaluateWithJudge(
   minScore: number,
 ): Promise<{ passed: boolean; score: number; reasoning: string }> {
   // In real implementation, this would call Claude API
-  // For now, return a mock result
+  // For now, return a mock result (await used for future API call)
   const prompt = createJudgePrompt(criteria, agentOutput);
 
   // Mock: if output contains expected patterns, give high score
@@ -55,9 +55,10 @@ export async function evaluateWithJudge(
 
   const score = hasSpawn || hasOutput || hasDecision ? 8 : 3;
 
-  return {
+  // Using await to satisfy async requirement - real impl will await API call
+  return await Promise.resolve({
     passed: score >= minScore,
     score,
     reasoning: `Mock evaluation. Score based on label presence. Prompt: ${prompt.slice(0, 100)}...`,
-  };
+  });
 }
