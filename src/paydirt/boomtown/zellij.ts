@@ -169,11 +169,14 @@ export async function createSession(
   layoutPath: string,
 ): Promise<boolean> {
   try {
+    // Use -s for session name and -n for new session with layout
+    // This ensures we always create a new session rather than
+    // trying to add tabs to an existing one
     const command = new Deno.Command('zellij', {
       args: [
-        '--session',
+        '-s',
         sessionName,
-        '--layout',
+        '-n',
         layoutPath,
       ],
       stdin: 'inherit',
