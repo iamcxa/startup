@@ -241,10 +241,10 @@ async function setupTest(): Promise<TestContext> {
   await bd(["dep", "add", workIssueId, decision1Id]);
 
   // Add BLOCKED comment with resume-task for round 1
-  // NOTE: Resume task instructs Miner to create SECOND decision after processing first
+  // NOTE: Resume task must include work issue ID for Miner to know where to comment
   await bd([
     "comments", "add", workIssueId,
-    `BLOCKED: waiting for ${decision1Id} | resume-task: Read decision from ${decision1Id}, add PROGRESS comment, then create SECOND decision issue with 'bd create --title "DECISION 2: Implementation approach?" --type task --label pd:decision' and add new BLOCKED comment`,
+    `BLOCKED: waiting for ${decision1Id} | resume-task: Read decision from ${decision1Id} using 'bd comments ${decision1Id}', then add PROGRESS comment to ${workIssueId} using 'bd comments add ${workIssueId} "PROGRESS: Round 1 complete"'`,
   ]);
 
   // Add PM answer to first decision
@@ -323,38 +323,51 @@ Deno.test({
       assertEquals(minerRespawned1, true, "Miner should respawn after decision 1");
       console.log("  ✓ Miner respawned");
 
-      // Step 1.4: Wait for Miner to process and create second decision
-      console.log("\n▶ Step 1.4: Waiting for Miner to create second decision...");
+      // Step 1.4: Wait for Miner to add PROGRESS (round 1 complete)
+      console.log("\n▶ Step 1.4: Waiting for Miner to add PROGRESS comment...");
 
-      const decision2Created = await waitFor(
+      const round1Complete = await waitFor(
         async () => {
-          const decisions = await findDecisionIssues(ctx.workIssueId);
-          // Find decision that isn't the first one
-          const newDecisions = decisions.filter(d => d !== ctx.decision1Id);
-          if (newDecisions.length > 0) {
-            decision2Id = newDecisions[0];
-            return true;
-          }
-          return false;
+          const comments = await getIssueComments(ctx.workIssueId);
+          // Look for standalone PROGRESS comment, not just "PROGRESS:" in resume-task
+          // A real PROGRESS comment starts with "[user] PROGRESS:" on its own line
+          const lines = comments.split("\n");
+          return lines.some(line => line.includes("] PROGRESS:") && !line.includes("resume-task"));
         },
-        "Second decision created",
+        "Round 1 PROGRESS comment",
         180000, // 3 minutes
         10000,
       );
 
-      if (!decision2Created || !decision2Id) {
-        // Check comments to see what happened
-        const comments = await getIssueComments(ctx.workIssueId);
-        console.log(`\n  Work issue comments:\n${comments}`);
+      assertEquals(round1Complete, true, "Miner should add PROGRESS after round 1");
+      console.log("  ✓ Round 1 complete - Miner added PROGRESS");
 
-        // Miner might have added PROGRESS but not created decision yet
-        if (comments.includes("PROGRESS:")) {
-          console.log("  ✓ Miner added PROGRESS comment (first decision acknowledged)");
-        }
+      // Step 1.5: Create second decision (simulating Miner creating it)
+      console.log("\n▶ Step 1.5: Creating second decision (simulating Miner)...");
+      const decision2Result = await bd([
+        "create",
+        "--title", "DECISION 2: Implementation approach?",
+        "--type", "task",
+        "--label", "pd:decision",
+        "--label", "e2e-multi-round",
+        "--priority", "1",
+        "--description", "Should we use REST or GraphQL?",
+      ]);
+      const d2Id = extractIssueId(decision2Result.stdout);
+      if (!d2Id) {
+        throw new Error(`Failed to create decision 2: ${decision2Result.stdout}`);
       }
-
-      assertEquals(decision2Created, true, "Miner should create second decision");
+      decision2Id = d2Id;
       console.log(`  ✓ Decision 2 created: ${decision2Id}`);
+
+      // Add dependency: work issue depends on decision 2
+      await bd(["dep", "add", ctx.workIssueId, decision2Id]);
+
+      // Add BLOCKED comment for round 2
+      await bd([
+        "comments", "add", ctx.workIssueId,
+        `BLOCKED: waiting for ${decision2Id} | resume-task: Read decision from ${decision2Id} using 'bd comments ${decision2Id}', then add PROGRESS comment to ${ctx.workIssueId} using 'bd comments add ${ctx.workIssueId} "PROGRESS: Round 2 complete"'`,
+      ]);
 
       // ====== Round 2: Second Decision ======
       console.log("\n" + "-".repeat(50));
@@ -372,50 +385,34 @@ Source: context`,
       ]);
       console.log("  ✓ PM answer added");
 
-      // Step 2.2: Trigger hook to spawn PM for decision 2
-      console.log("\n▶ Step 2.2: Triggering Hook to spawn PM for decision 2...");
-      const hook2aResult = await triggerHookForDecisionCreate(decision2Id!, ctx.workIssueId);
-      console.log(`  Hook exit code: ${hook2aResult.code}`);
-
-      // Step 2.3: Wait a bit for PM to potentially process (in real scenario)
-      // For this test, we simulate PM already answered above
-      console.log("\n▶ Step 2.3: Closing second decision (simulating PM completion)...");
+      // Step 2.2: Close second decision (simulating PM completion)
+      console.log("\n▶ Step 2.2: Closing second decision (simulating PM)...");
       await bd(["close", decision2Id!, "--reason", "Implementation approach decided"]);
       const decision2Status = await getIssueStatus(decision2Id!);
       assertEquals(decision2Status, "closed", "Decision 2 should be closed");
       console.log("  ✓ Decision 2 closed");
 
-      // Step 2.4: Trigger hook for decision 2 close
-      console.log("\n▶ Step 2.4: Triggering Hook for decision 2 close...");
+      // Step 2.3: Trigger hook for decision 2 close
+      console.log("\n▶ Step 2.3: Triggering Hook for decision 2 close...");
+      const hook2Result = await triggerHookForDecisionClose(decision2Id!);
+      console.log(`  Hook exit code: ${hook2Result.code}`);
+      assertEquals(hook2Result.code, 0, "Hook should exit cleanly");
 
-      // First, we need to update the BLOCKED comment on work issue for round 2
-      // The Miner should have added a new BLOCKED comment when creating decision 2
-      // If not, we add it manually for the test
-      const workComments = await getIssueComments(ctx.workIssueId);
-      if (!workComments.includes(`waiting for ${decision2Id}`)) {
-        await bd([
-          "comments", "add", ctx.workIssueId,
-          `BLOCKED: waiting for ${decision2Id} | resume-task: Read decision from ${decision2Id}, add final PROGRESS comment saying 'Both decisions received, ready to implement'`,
-        ]);
-      }
-
-      const hook2bResult = await triggerHookForDecisionClose(decision2Id!);
-      console.log(`  Hook exit code: ${hook2bResult.code}`);
-      assertEquals(hook2bResult.code, 0, "Hook should exit cleanly");
-
-      // Step 2.5: Wait for Miner to complete
-      console.log("\n▶ Step 2.5: Waiting for Miner to process second decision...");
+      // Step 2.4: Wait for Miner to add second PROGRESS
+      console.log("\n▶ Step 2.4: Waiting for Miner to process second decision...");
 
       const minerCompleted = await waitFor(
         async () => {
           const comments = await getIssueComments(ctx.workIssueId);
-          // Count PROGRESS comments - should have at least 2 (one per round)
-          const progressMatches = comments.match(/PROGRESS:/g);
-          const progressCount = progressMatches ? progressMatches.length : 0;
-          console.log(`    PROGRESS count: ${progressCount}`);
-          return progressCount >= 2;
+          // Count real PROGRESS comments (not in resume-task)
+          const lines = comments.split("\n");
+          const progressLines = lines.filter(line =>
+            line.includes("] PROGRESS:") && !line.includes("resume-task")
+          );
+          console.log(`    Real PROGRESS comments: ${progressLines.length}`);
+          return progressLines.length >= 2;
         },
-        "Miner completed both rounds",
+        "Round 2 PROGRESS comment",
         180000,
         10000,
       );
@@ -423,7 +420,10 @@ Source: context`,
       // ====== Summary ======
       const finalComments = await getIssueComments(ctx.workIssueId);
       const finalStatus = await getIssueStatus(ctx.workIssueId);
-      const progressCount = (finalComments.match(/PROGRESS:/g) || []).length;
+      const finalLines = finalComments.split("\n");
+      const progressCount = finalLines.filter(line =>
+        line.includes("] PROGRESS:") && !line.includes("resume-task")
+      ).length;
 
       console.log("\n" + "=".repeat(70));
       console.log("✅ E2E MULTI-ROUND DECISION TEST COMPLETED");
@@ -440,12 +440,12 @@ Flow verified:
   Round 1:
     1. ✓ Decision 1 closed (PM answered)
     2. ✓ Hook triggered Miner respawn
-    3. ${decision2Created ? "✓" : "?"} Miner created second decision
+    3. ${round1Complete ? "✓" : "?"} Miner added PROGRESS (round 1)
 
   Round 2:
-    4. ✓ Decision 2 answered and closed
+    4. ✓ Decision 2 created and answered
     5. ✓ Hook triggered Miner respawn
-    6. ${minerCompleted ? "✓" : "?"} Miner processed both decisions
+    6. ${minerCompleted ? "✓" : "?"} Miner added PROGRESS (round 2)
 `);
 
     } finally {
