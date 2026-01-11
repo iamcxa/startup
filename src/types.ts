@@ -11,7 +11,8 @@ export type ProspectRole =
   | 'canary'
   | 'smelter'
   | 'claim-agent'
-  | 'scout';
+  | 'scout'
+  | 'pm';  // Decision proxy agent
 
 export type CaravanMode = 'manual' | 'prime';
 

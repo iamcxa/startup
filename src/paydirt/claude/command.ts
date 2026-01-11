@@ -55,6 +55,7 @@ export interface ClaudeCommandOptions {
   paydirtBinPath?: string;
   resume?: boolean;
   dangerouslySkipPermissions?: boolean;
+  print?: boolean;  // Non-interactive mode (output and exit)
   extraArgs?: string[];
 }
 
@@ -72,6 +73,7 @@ export function buildClaudeCommand(options: ClaudeCommandOptions): string {
     paydirtBinPath,
     resume,
     dangerouslySkipPermissions,
+    print,
     extraArgs = [],
   } = options;
 
@@ -112,18 +114,31 @@ export function buildClaudeCommand(options: ClaudeCommandOptions): string {
   // 6. Skip permissions flag (for autonomous operation)
   if (dangerouslySkipPermissions) {
     args.push('--dangerously-skip-permissions');
+    args.push('--permission-mode', 'bypassPermissions');
   }
 
-  // 7. Extra args
+  // 7. Print flag (for non-interactive mode - run and exit)
+  if (print) {
+    args.push('--print');
+  }
+
+  // 8. Extra args
   args.push(...extraArgs);
 
-  // 8. Prompt as last argument
-  if (prompt) {
-    args.push(shellEscape(prompt));
-  }
-
   // Build full command with env vars and cd to project dir
-  const command = `cd ${shellEscape(userProjectDir)} && ${envString} ${args.join(' ')}`;
+  // When using --print mode, pipe the prompt via stdin for more reliable execution
+  // (positional prompt argument has inconsistent behavior with --print)
+  let command: string;
+  if (print && prompt) {
+    // Use subshell to ensure proper piping: cd && (echo | command)
+    command = `cd ${shellEscape(userProjectDir)} && echo ${shellEscape(prompt)} | ${envString} ${args.join(' ')}`;
+  } else {
+    // 9. Prompt as last argument (for interactive mode)
+    if (prompt) {
+      args.push(shellEscape(prompt));
+    }
+    command = `cd ${shellEscape(userProjectDir)} && ${envString} ${args.join(' ')}`;
+  }
 
   return command;
 }

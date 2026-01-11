@@ -40,7 +40,7 @@ if echo "$TOOL_INPUT" | grep -qE "bd create.*--label[= ].*pd:decision"; then
   DECISION_ID=$(echo "$TOOL_OUTPUT" | sed -n 's/.*Created issue:[[:space:]]*\([^[:space:]]*\).*/\1/p' | head -1)
 
   if [ -n "$DECISION_ID" ] && [ -n "$PAYDIRT_BIN" ]; then
-    run_cmd "$PAYDIRT_BIN" prospect pm --claim "$DECISION_ID" --background
+    run_cmd "$PAYDIRT_BIN" prospect pm --claim "$DECISION_ID" --background --task "Answer decision issue $DECISION_ID"
   fi
 fi
 

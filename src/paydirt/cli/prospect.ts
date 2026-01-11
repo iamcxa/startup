@@ -22,6 +22,7 @@ const VALID_ROLES: ProspectRole[] = [
   'smelter',
   'claim-agent',
   'scout',
+  'pm',  // Decision proxy agent
 ];
 
 /**
@@ -127,6 +128,8 @@ export async function prospectCommand(options: ProspectOptions): Promise<void> {
     userProjectDir,
     prompt,
     paydirtBinPath: getPaydirtBinPath(),
+    dangerouslySkipPermissions: true,  // Enable autonomous operation
+    print: background,  // Non-interactive mode when running in background
   });
 
   if (dryRun) {
