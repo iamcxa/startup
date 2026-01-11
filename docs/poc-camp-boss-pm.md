@@ -484,15 +484,63 @@ Created src/greet.ts with greet function using format
 
 **結論**：P1 Stage 2 驗證**真實實作能力** ✅
 
-### P2: Context Exhaustion
+### P2: Context Exhaustion ✅
 
 驗證 Miner context 耗盡時能自動 respawn 並繼續
 
+**測試檔案**：`tests/e2e/context-exhaustion.test.ts`
+
 **測試設計**：
 ```typescript
-監測: conversation compaction event
-驗證: Miner respawn + 讀取 bd issue 恢復 context
+Phase 1: Miner 完成 Task 1 (file1.txt)
+Phase 2: Kill session (模擬 context exhaustion)
+Phase 3: 從 bd issue 恢復 context，respawn Miner
+Phase 4: Miner 完成 Task 2 (file2.txt)
+
+驗證: 兩個檔案存在 + 兩個 PROGRESS comments
 ```
+
+**執行結果** (2026-01-11)：
+- ✅ Task 1 完成：15s
+- ✅ Session 中斷：成功
+- ✅ Context 恢復：從 bd comments
+- ✅ Task 2 完成：15s
+- ⏱️ 總時間：35s
+
+**Phase 1 - Initial Work**：
+```
+PROGRESS: Task 1 done
+```
+- file1.txt 創建並 commit ✓
+
+**Phase 2 - Session Interruption**：
+```
+tmux session killed → simulates context exhaustion
+```
+- Session 確認不存在 ✓
+
+**Phase 3 - Context Recovery**：
+```
+Recovered comments:
+[kent] PROGRESS: Task 1 done at 2026-01-11 17:44
+```
+- bd issue 提供完整 context ✓
+- Miner respawn 成功 ✓
+
+**Phase 4 - Continued Work**：
+```
+PROGRESS: Task 2 done after respawn
+```
+- file2.txt 創建並 commit ✓
+- Miner 知道是 "after respawn" ✓
+
+**關鍵發現**：
+1. **bd 作為持久化 context**：成功保存工作進度
+2. **Respawn 無延遲**：Session 中斷與恢復幾乎即時
+3. **工作延續性**：兩個任務都完成，兩個 PROGRESS comments
+4. **Miner 理解 context**：第二個 comment 提到 "after respawn"
+
+**結論**：P2 驗證**Context exhaustion 可應對** ✅
 
 ### P3: 錯誤處理
 
@@ -534,7 +582,8 @@ paydirt/
 │   ├── full-chain.test.ts            # 完整鏈路測試
 │   ├── miner-resume.test.ts          # Resume 測試
 │   ├── multi-round-decision.test.ts  # 多輪循環測試
-│   └── real-implementation.test.ts   # P1 真實實作測試
+│   ├── real-implementation.test.ts   # P1 真實實作測試
+│   └── context-exhaustion.test.ts    # P2 Context exhaustion 測試
 └── docs/
     └── poc-camp-boss-pm.md           # 本文件
 ```
