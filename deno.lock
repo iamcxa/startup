@@ -10,6 +10,7 @@
       "jsr:@std/internal@^1.0.12": "jsr:@std/internal@1.0.12",
       "npm:@langfuse/otel@^4.5.1": "npm:@langfuse/otel@4.5.1_@opentelemetry+api@1.9.0_@opentelemetry+core@2.3.0__@opentelemetry+api@1.9.0_@opentelemetry+exporter-trace-otlp-http@0.209.0__@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@2.3.0__@opentelemetry+api@1.9.0",
       "npm:@langfuse/tracing@^4.5.1": "npm:@langfuse/tracing@4.5.1_@opentelemetry+api@1.9.0",
+      "npm:@opentelemetry/api@^1.9.0": "npm:@opentelemetry/api@1.9.0",
       "npm:@opentelemetry/sdk-node@^0.209.0": "npm:@opentelemetry/sdk-node@0.209.0_@opentelemetry+api@1.9.0"
     },
     "jsr": {
