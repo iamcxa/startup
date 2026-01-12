@@ -15,8 +15,17 @@
 // Types and Constants
 // ============================================================================
 
-/** Default session name for Boomtown dashboard */
-export const BOOMTOWN_SESSION = 'startup-boomtown';
+/** Session name for the unified Startup dashboard */
+export const STARTUP_SESSION = 'startup';
+
+/** Legacy alias for backward compatibility */
+export const BOOMTOWN_SESSION = STARTUP_SESSION;
+
+/** Tmux session for CTO (company-level) */
+export const CTO_TMUX_SESSION = 'startup-company';
+
+/** Tab name for CTO */
+export const CTO_TAB_NAME = 'CTO';
 
 /** Configuration for a single pane in Zellij */
 export interface ZellijPane {
