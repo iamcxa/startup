@@ -319,6 +319,66 @@ export async function removeCaravanTab(tabName: string): Promise<boolean> {
 }
 
 // ============================================================================
+// Dynamic Team Tab Management
+// ============================================================================
+
+/**
+ * Add a new Team tab to the Startup dashboard.
+ * Creates a tab with initial pane attaching to the team's tmux session.
+ *
+ * @param teamId - Team ID (e.g., "st-abc123")
+ * @param teamName - Display name for the tab
+ * @param initialRole - First role in the team (default: "lead")
+ * @returns true if tab was added successfully
+ */
+export async function addTeamTab(
+  teamId: string,
+  teamName: string,
+  initialRole: string = 'lead',
+): Promise<boolean> {
+  try {
+    const tmuxSession = `startup-${teamId}`;
+    const tabName = teamName || `team-${teamId.slice(0, 8)}`;
+
+    // Create reconnecting attach script
+    const attachScript =
+      `while true; do tmux attach-session -t ${tmuxSession}:${initialRole} 2>/dev/null || (echo "Waiting for ${initialRole}..." && sleep 2); done`;
+
+    // Create new tab
+    const createCmd = new Deno.Command('zellij', {
+      args: ['action', 'new-tab', '--name', tabName],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+
+    const createResult = await createCmd.output();
+    if (!createResult.success) {
+      return false;
+    }
+
+    // Write the attach command
+    const writeCmd = new Deno.Command('zellij', {
+      args: ['action', 'write-chars', attachScript],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+    await writeCmd.output();
+
+    // Press Enter to execute
+    const enterCmd = new Deno.Command('zellij', {
+      args: ['action', 'write', '13'],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+    await enterCmd.output();
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ============================================================================
 // Utility Functions
 // ============================================================================
 
