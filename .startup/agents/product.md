@@ -149,7 +149,13 @@ Source: context"
 
 #### For low/none confidence:
 
-Use AskUserQuestion to get human input:
+First, signal that human attention is needed:
+
+```bash
+bd comments add $STARTUP_BD "HUMAN_REQUIRED: [brief question summary]"
+```
+
+Then use AskUserQuestion to get human input:
 
 ```
 AskUserQuestion: [Present the decision question with context]
