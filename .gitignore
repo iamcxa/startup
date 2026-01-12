@@ -12,6 +12,10 @@
 dist/
 paydirt-binary
 
+# Compiled binaries
+startup
+st
+
 # Local
 *.local.*
 .env
