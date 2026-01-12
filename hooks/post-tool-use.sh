@@ -161,6 +161,14 @@ if echo "$TOOL_INPUT" | grep -qE "startup kickoff"; then
   fi
 fi
 
+# --- HUMAN_REQUIRED Detection ---
+# Detect HUMAN_REQUIRED comment -> focus switch to that team/role
+if echo "$TOOL_INPUT" | grep -qE "bd comments add.*HUMAN_REQUIRED:"; then
+  if [ -n "$STARTUP_BD" ]; then
+    focus_team_role "$STARTUP_BD"
+  fi
+fi
+
 # Check if this is a bd comments add command
 echo "$TOOL_INPUT" | grep -q "bd comments add" || exit 0
 
