@@ -249,13 +249,13 @@ Deno.test({
     const claimId = await createTestClaim('Test SPAWN Command');
 
     try {
-      const success = await addComment(claimId, 'SPAWN: surveyor --task "Design the authentication system"');
+      const success = await addComment(claimId, 'SPAWN: designer --task "Design the authentication system"');
       assertEquals(success, true);
 
       const comments = await getComments(claimId);
       const spawnComment = comments.find((c) => c.includes('SPAWN'));
       assertExists(spawnComment, 'SPAWN comment should exist');
-      assertStringIncludes(spawnComment, 'surveyor');
+      assertStringIncludes(spawnComment, 'designer');
       assertStringIncludes(spawnComment, 'Design the authentication system');
     } finally {
       await closeClaim(claimId);
@@ -361,7 +361,7 @@ Deno.test({
       await addComment(claimId, 'ANSWER: OAuth2 with Google - matches requirements');
 
       // Step 3: Trail Boss spawns Surveyor
-      await addComment(claimId, 'SPAWN: surveyor --task "Design OAuth integration"');
+      await addComment(claimId, 'SPAWN: designer --task "Design OAuth integration"');
 
       // Step 4: Surveyor reports output
       await addComment(claimId, 'OUTPUT: design=docs/plans/oauth-design.md');

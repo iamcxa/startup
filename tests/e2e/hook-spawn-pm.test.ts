@@ -4,7 +4,7 @@
 // This test verifies the full flow:
 // 1. Create pd:decision issue
 // 2. Trigger Hook (simulating PostToolUse after bd create)
-// 3. Hook spawns real PM Agent via startup prospect
+// 3. Hook spawns real PM Agent via startup call
 // 4. PM answers and closes the decision issue
 //
 // Run with: RUN_E2E_TESTS=1 deno test tests/e2e/hook-spawn-pm.test.ts --allow-all
@@ -189,7 +189,7 @@ async function setupTest(): Promise<TestContext> {
   // Add dependency
   await bd(["dep", "add", workIssueId, decisionIssueId]);
 
-  // Session name matches startup prospect convention
+  // Session name matches startup call convention
   const sessionName = `startup-${decisionIssueId}`;
 
   return {
@@ -240,7 +240,7 @@ Deno.test({
         CLAUDE_TOOL_INPUT: `bd create --title "DECISION: test" --type task --label pd:decision`,
         CLAUDE_TOOL_OUTPUT: `Created issue: ${ctx.decisionIssueId}`,
         STARTUP_BD: ctx.workIssueId,
-        STARTUP_ROLE: "miner",
+        STARTUP_ROLE: "engineer",
       });
 
       console.log(`  Hook exit code: ${hookResult.code}`);

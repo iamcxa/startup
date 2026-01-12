@@ -6,14 +6,14 @@ import type { BehaviorTest } from "../../src/bq-test/types.ts";
 // Define test cases directly (in real impl, load from YAML)
 const campBossTest: BehaviorTest = {
   scenario: {
-    name: "camp-boss-spawns-surveyor",
+    name: "camp-boss-spawns-designer",
     description: "Camp Boss receives implementation request and spawns Surveyor",
     agent: "camp-boss",
     input: "User: I need to add user authentication to the application.",
   },
   expectations: {
     assertions: {
-      spawned: ["surveyor"],
+      spawned: ["designer"],
       createdIssue: false,
       exitedCleanly: true,
     },

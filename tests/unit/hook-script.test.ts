@@ -124,12 +124,12 @@ Deno.test('dispatcher - SPAWN triggers specified role spawn', async () => {
     '../../src/startup/hooks/dispatcher.ts'
   );
 
-  const parsed = parseComment('SPAWN: surveyor --task "Design authentication"');
+  const parsed = parseComment('SPAWN: designer --task "Design authentication"');
   assertEquals(parsed.prefix, 'SPAWN');
 
   const action = getDispatchAction(parsed.prefix, parsed.content);
   assertEquals(action.type, 'spawn');
-  assertEquals(action.role, 'surveyor');
+  assertEquals(action.role, 'designer');
   assertEquals(action.task, 'Design authentication');
 });
 
@@ -227,8 +227,8 @@ Deno.test('parseSpawnCommand - parses role with task', async () => {
     '../../src/startup/hooks/dispatcher.ts'
   );
 
-  const result = parseSpawnCommand('surveyor --task "Design the system"');
-  assertEquals(result?.role, 'surveyor');
+  const result = parseSpawnCommand('designer --task "Design the system"');
+  assertEquals(result?.role, 'designer');
   assertEquals(result?.task, 'Design the system');
 });
 
@@ -247,7 +247,7 @@ Deno.test('parseSpawnCommand - handles complex task descriptions', async () => {
     '../../src/startup/hooks/dispatcher.ts'
   );
 
-  const result = parseSpawnCommand('shift-boss --task "Implement OAuth2 with Google and GitHub providers"');
-  assertEquals(result?.role, 'shift-boss');
+  const result = parseSpawnCommand('lead --task "Implement OAuth2 with Google and GitHub providers"');
+  assertEquals(result?.role, 'lead');
   assertEquals(result?.task, 'Implement OAuth2 with Google and GitHub providers');
 });

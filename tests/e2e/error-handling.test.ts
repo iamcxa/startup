@@ -90,7 +90,7 @@ async function spawnMiner(
   langfuse?: LangfuseTestContext,
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   const cmd = new Deno.Command(STARTUP_BIN, {
-    args: ["prospect", "miner", "--claim", issueId, "--task", task, "--background", "--model", model],
+    args: ["call", "miner", "--claim", issueId, "--task", task, "--background", "--model", model],
     cwd: WORK_DIR,
     env: {
       ...Deno.env.toObject(),

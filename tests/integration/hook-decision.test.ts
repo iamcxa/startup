@@ -110,7 +110,7 @@ Deno.test("Hook spawns PM when bd create pd:decision detected", async () => {
   assertEquals(result.capturedCommands.length, 1, "Should capture one command");
   assertStringIncludes(
     result.capturedCommands[0],
-    "prospect pm",
+    "call pm",
     "Should spawn PM agent",
   );
   assertStringIncludes(
@@ -129,7 +129,7 @@ Deno.test("Hook spawns PM with --label=pd:decision syntax", async () => {
 
   assertEquals(result.code, 0);
   assertEquals(result.capturedCommands.length, 1);
-  assertStringIncludes(result.capturedCommands[0], "prospect pm");
+  assertStringIncludes(result.capturedCommands[0], "call pm");
   assertStringIncludes(result.capturedCommands[0], "--claim beads-xyz789");
 });
 
@@ -253,7 +253,7 @@ Deno.test("Hook respawns Miner when pd:decision closed (with real bd)", async ()
       assertEquals(result.capturedCommands.length, 1, "Should capture miner respawn command");
       assertStringIncludes(
         result.capturedCommands[0],
-        "prospect miner",
+        "call miner",
         "Should respawn miner",
       );
       assertStringIncludes(
@@ -334,14 +334,14 @@ Deno.test("Hook does NOT respawn for non-decision issue close", async () => {
 
 Deno.test("Hook spawns agent from SPAWN: comment", async () => {
   const result = await runHook({
-    CLAUDE_TOOL_INPUT: 'bd comments add beads-123 "SPAWN: surveyor --task Design the auth system"',
+    CLAUDE_TOOL_INPUT: 'bd comments add beads-123 "SPAWN: designer --task Design the auth system"',
     CLAUDE_TOOL_OUTPUT: "Comment added",
     STARTUP_BD: "beads-convoy456",
   });
 
   assertEquals(result.code, 0);
   assertEquals(result.capturedCommands.length, 1);
-  assertStringIncludes(result.capturedCommands[0], "prospect surveyor");
+  assertStringIncludes(result.capturedCommands[0], "call designer");
   assertStringIncludes(result.capturedCommands[0], "--claim beads-convoy456");
 });
 

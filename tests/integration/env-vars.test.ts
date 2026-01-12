@@ -1,20 +1,20 @@
 // tests/integration/env-vars.test.ts
 /**
- * Tests that prospect-launched Claude has correct environment variables.
+ * Tests that call-launched Claude has correct environment variables.
  */
 
 import { assertStringIncludes } from '@std/assert';
 
 Deno.test({
-  name: 'prospect --dry-run shows STARTUP environment variables',
+  name: 'call --dry-run shows STARTUP environment variables',
   async fn() {
     const cmd = new Deno.Command('deno', {
       args: [
         'run',
         '--allow-all',
         'startup.ts',
-        'prospect',
-        'surveyor',
+        'call',
+        'designer',
         '--claim',
         'pd-envtest',
         '--task',
@@ -32,7 +32,7 @@ Deno.test({
     assertStringIncludes(output, 'STARTUP_BD=');
     assertStringIncludes(output, 'pd-envtest');
     assertStringIncludes(output, 'STARTUP_ROLE=');
-    assertStringIncludes(output, 'surveyor');
+    assertStringIncludes(output, 'designer');
     assertStringIncludes(output, 'STARTUP_BIN=');
   },
 });

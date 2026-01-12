@@ -8,8 +8,8 @@
  * 3. Verify hook would spawn claim-agent
  * 4. Simulate Claim Agent writing ANSWER
  * 5. Simulate Trail Boss writing SPAWN
- * 6. Verify hook would spawn surveyor
- * 7. Simulate Surveyor writing OUTPUT
+ * 6. Verify hook would spawn designer
+ * 7. Simulate Designer writing OUTPUT
  *
  * NOTE: These tests verify the dispatch logic and bd comments flow.
  * They do NOT actually spawn Claude (which would require API keys).
@@ -125,20 +125,20 @@ Deno.test({
 
       assertEquals(answerAction.type, 'notify', 'ANSWER should trigger notify');
 
-      // Step 6: Trail Boss writes SPAWN to create Surveyor
-      const spawnContent = 'SPAWN: surveyor --task "Design OAuth2 integration"';
+      // Step 6: Trail Boss writes SPAWN to create Designer
+      const spawnContent = 'SPAWN: designer --task "Design OAuth2 integration"';
       const spawnSuccess = await addComment(claimId, spawnContent);
       assertEquals(spawnSuccess, true, 'Should add SPAWN comment');
 
-      // Step 7: Verify SPAWN dispatch would spawn surveyor
+      // Step 7: Verify SPAWN dispatch would spawn designer
       const spawnParsed = parseComment(spawnContent);
       const spawnAction = getDispatchAction(spawnParsed.prefix, spawnParsed.content);
 
       assertEquals(spawnAction.type, 'spawn', 'SPAWN should trigger spawn');
-      assertEquals(spawnAction.role, 'surveyor', 'SPAWN should spawn surveyor');
+      assertEquals(spawnAction.role, 'designer', 'SPAWN should spawn designer');
       assertEquals(spawnAction.task, 'Design OAuth2 integration', 'SPAWN should include task');
 
-      // Step 8: Surveyor writes OUTPUT
+      // Step 8: Designer writes OUTPUT
       const outputSuccess = await addComment(claimId, 'OUTPUT: design=docs/plans/oauth-design.md files=3');
       assertEquals(outputSuccess, true, 'Should add OUTPUT comment');
 
@@ -200,7 +200,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'E2E: SPAWN chain - Surveyor → Shift Boss → Miner',
+  name: 'E2E: SPAWN chain - Designer → Lead → Engineer',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
@@ -212,26 +212,26 @@ Deno.test({
         '../../src/startup/hooks/dispatcher.ts'
       );
 
-      // Trail Boss spawns Surveyor
-      const spawn1 = 'SPAWN: surveyor --task "Design the system"';
+      // Trail Boss spawns Designer
+      const spawn1 = 'SPAWN: designer --task "Design the system"';
       await addComment(claimId, spawn1);
 
       const action1 = getDispatchAction(parseComment(spawn1).prefix, parseComment(spawn1).content);
-      assertEquals(action1.role, 'surveyor');
+      assertEquals(action1.role, 'designer');
 
-      // Surveyor spawns Shift Boss
-      const spawn2 = 'SPAWN: shift-boss --task "Plan implementation phases"';
+      // Designer spawns Lead
+      const spawn2 = 'SPAWN: lead --task "Plan implementation phases"';
       await addComment(claimId, spawn2);
 
       const action2 = getDispatchAction(parseComment(spawn2).prefix, parseComment(spawn2).content);
-      assertEquals(action2.role, 'shift-boss');
+      assertEquals(action2.role, 'lead');
 
-      // Shift Boss spawns Miner
-      const spawn3 = 'SPAWN: miner --task "Implement auth module"';
+      // Lead spawns Engineer
+      const spawn3 = 'SPAWN: engineer --task "Implement auth module"';
       await addComment(claimId, spawn3);
 
       const action3 = getDispatchAction(parseComment(spawn3).prefix, parseComment(spawn3).content);
-      assertEquals(action3.role, 'miner');
+      assertEquals(action3.role, 'engineer');
 
       // Verify all spawns recorded
       const comments = await getComments(claimId);
@@ -338,7 +338,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'E2E: Real tmux session creation with prospect command',
+  name: 'E2E: Real tmux session creation with call command',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
@@ -346,11 +346,11 @@ Deno.test({
     const sessionName = `startup-${claimId}`;
 
     try {
-      // Spawn a prospect (with --background to not attach)
+      // Spawn a call (with --background to not attach)
       const cmd = new Deno.Command('deno', {
         args: [
           'run', '--allow-all', 'startup.ts',
-          'prospect', 'surveyor',
+          'call', 'designer',
           '--claim', claimId,
           '--task', 'E2E test task',
           '--background',
@@ -361,7 +361,7 @@ Deno.test({
       });
 
       const { success } = await cmd.output();
-      assertEquals(success, true, 'Prospect command should succeed');
+      assertEquals(success, true, 'Call command should succeed');
 
       // Verify session exists
       const checkCmd = new Deno.Command('tmux', {
@@ -382,7 +382,7 @@ Deno.test({
       const { stdout } = await listCmd.output();
       const windows = new TextDecoder().decode(stdout);
 
-      assertStringIncludes(windows, 'surveyor', 'Should have surveyor window');
+      assertStringIncludes(windows, 'designer', 'Should have designer window');
 
     } finally {
       await closeClaim(claimId);

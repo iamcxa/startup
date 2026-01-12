@@ -21,10 +21,10 @@ Deno.test('POC Integration: Hook dispatcher parses bd comments correctly', async
   assertEquals(qAction.role, 'claim-agent');
 
   // Test SPAWN triggers role spawn
-  const s = parseComment('SPAWN: surveyor --task "Design auth"');
+  const s = parseComment('SPAWN: designer --task "Design auth"');
   const sAction = getDispatchAction(s.prefix, s.content);
   assertEquals(sAction.type, 'spawn');
-  assertEquals(sAction.role, 'surveyor');
+  assertEquals(sAction.role, 'designer');
   assertEquals(sAction.task, 'Design auth');
 
   // Test OUTPUT triggers notify

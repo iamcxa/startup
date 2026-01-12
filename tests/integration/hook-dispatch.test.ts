@@ -68,7 +68,7 @@ Deno.test({
   async fn() {
     // Use echo as STARTUP_BIN to capture what would be called
     const result = await runHookWithInput(
-      'bd comments add pd-123 "SPAWN: surveyor"',
+      'bd comments add pd-123 "SPAWN: designer"',
       {
         STARTUP_BIN: 'echo',
         STARTUP_BD: 'pd-123',
@@ -76,8 +76,8 @@ Deno.test({
     );
     assertEquals(result.success, true);
     // Echo will print the command that would be executed
-    assertStringIncludes(result.stdout, 'prospect');
-    assertStringIncludes(result.stdout, 'surveyor');
+    assertStringIncludes(result.stdout, 'call');
+    assertStringIncludes(result.stdout, 'designer');
     assertStringIncludes(result.stdout, '--claim');
     assertStringIncludes(result.stdout, 'pd-123');
   },
@@ -110,7 +110,7 @@ Deno.test({
       },
     );
     assertEquals(result.success, true);
-    assertStringIncludes(result.stdout, 'prospect');
+    assertStringIncludes(result.stdout, 'call');
     assertStringIncludes(result.stdout, 'claim-agent');
   },
 });
@@ -141,7 +141,7 @@ Deno.test({
       },
     );
     assertEquals(result.success, true);
-    assertStringIncludes(result.stdout, 'prospect');
+    assertStringIncludes(result.stdout, 'call');
     assertStringIncludes(result.stdout, 'miner');
     assertStringIncludes(result.stdout, '--claim');
     assertStringIncludes(result.stdout, 'pd-other');
@@ -181,7 +181,7 @@ Deno.test({
     const output = new TextDecoder().decode(stdout);
 
     // Verify it would spawn PM with correct arguments
-    assertEquals(output.includes('prospect'), true, 'Should call prospect command');
+    assertEquals(output.includes('call'), true, 'Should call call command');
     assertEquals(output.includes('pm'), true, 'Should spawn PM agent');
     assertEquals(output.includes('pd-dec456'), true, 'Should use decision issue ID');
   },

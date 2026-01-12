@@ -92,7 +92,7 @@ async function spawnAgent(
   langfuse?: LangfuseTestContext,
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   const cmd = new Deno.Command(STARTUP_BIN, {
-    args: ["prospect", role, "--claim", issueId, "--task", task, "--background", "--model", model],
+    args: ["call", role, "--claim", issueId, "--task", task, "--background", "--model", model],
     cwd: WORK_DIR,
     env: {
       ...Deno.env.toObject(),
@@ -266,9 +266,9 @@ ENDOFFILE' && git add src/calculator.ts && git commit -m "feat: add calculator (
       console.log("-".repeat(50));
 
       console.log("\n▶ Step 2.5.1: Spawning Assayer...");
-      const assayerTask = `Review src/calculator.ts for type safety issues. Check for 'any' types. Add bd comment to ${ctx.workIssueId} with format: 'REVIEW: Found issues - [list issues]'`;
+      const reviewerTask = `Review src/calculator.ts for type safety issues. Check for 'any' types. Add bd comment to ${ctx.workIssueId} with format: 'REVIEW: Found issues - [list issues]'`;
 
-      const spawnAssayerResult = await spawnAgent("assayer", ctx.workIssueId, assayerTask, "sonnet", langfuse);
+      const spawnAssayerResult = await spawnAgent("reviewer", ctx.workIssueId, reviewerTask, "sonnet", langfuse);
       assertEquals(spawnAssayerResult.code, 0, "Assayer should spawn successfully");
       console.log("  ✓ Assayer spawned");
 
@@ -278,7 +278,7 @@ ENDOFFILE' && git add src/calculator.ts && git commit -m "feat: add calculator (
       console.log("-".repeat(50));
 
       console.log("\n▶ Step 3.1: Waiting for Assayer review...");
-      const assayerReviewed = await waitFor(
+      const reviewerReviewed = await waitFor(
         async () => {
           const comments = await getIssueComments(ctx.workIssueId);
           return comments.includes("REVIEW:");
@@ -288,7 +288,7 @@ ENDOFFILE' && git add src/calculator.ts && git commit -m "feat: add calculator (
         5000,
       );
 
-      assertEquals(assayerReviewed, true, "Assayer should add review");
+      assertEquals(reviewerReviewed, true, "Assayer should add review");
       const phase3Comments = await getIssueComments(ctx.workIssueId);
       console.log(`  Review comments:\n${phase3Comments.split("\n").map(l => "    " + l).join("\n")}`);
       console.log("  ✓ Assayer completed review");

@@ -33,12 +33,12 @@ const realConfig: RealModeConfig = {
  * Expected behavior:
  * - Camp Boss receives user request
  * - Does NOT write code directly
- * - Spawns Surveyor agent via "SPAWN: surveyor" comment
+ * - Spawns Surveyor agent via "SPAWN: designer" comment
  * - Exits cleanly
  */
 const campBossTest: BehaviorTest = {
   scenario: {
-    name: "camp-boss-spawns-surveyor",
+    name: "camp-boss-spawns-designer",
     description: "Camp Boss receives implementation request and spawns Surveyor",
     agent: "camp-boss",
     input: `You are Camp Boss. A user wants to add user authentication.
@@ -50,14 +50,14 @@ User request: "I need to add user authentication to the application."
 Remember:
 - You are Camp Boss - you delegate, you don't implement
 - Use superpowers:brainstorming if needed
-- Spawn surveyor for design work
-- Output "SPAWN: surveyor --task <description>" to delegate
+- Spawn designer for design work
+- Output "SPAWN: designer --task <description>" to delegate
 
 After deciding, output your delegation and exit.`,
   },
   expectations: {
     assertions: {
-      spawned: ["surveyor"],
+      spawned: ["designer"],
       createdIssue: false,
       exitedCleanly: true,
     },

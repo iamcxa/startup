@@ -197,7 +197,7 @@ async function spawnMiner(
 ): Promise<boolean> {
   const cmd = new Deno.Command(STARTUP_BIN, {
     args: [
-      "prospect", "miner",
+      "call", "miner",
       "--claim", workIssueId,
       "--task", task,
       "--background",
@@ -281,7 +281,7 @@ Deno.test({
       // ====== Phase 1: Spawn Miner ======
       console.log("\n▶ Phase 1: Spawning Miner with ambiguous task...");
 
-      // Prompt follows the exact format from prospects/miner.md Decision Blocking section
+      // Prompt follows the exact format from calls/miner.md Decision Blocking section
       const minerSpawned = await spawnMiner(
         ctx.workIssueId,
         `You need to create a decision issue. Run EXACTLY these commands:

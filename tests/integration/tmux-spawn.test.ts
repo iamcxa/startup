@@ -1,7 +1,7 @@
 // tests/integration/tmux-spawn.test.ts
 /**
  * Tests for tmux session/window creation via CLI commands.
- * Verifies that prospect commands actually create tmux sessions.
+ * Verifies that call commands actually create tmux sessions.
  *
  * NOTE: These tests create real tmux sessions and clean them up afterward.
  * They require tmux to be installed and available.
@@ -96,7 +96,7 @@ async function createTestSession(sessionName: string, windowName: string = 'init
 // ============================================================================
 
 Deno.test({
-  name: 'prospect command with --dry-run shows Claude command without creating session',
+  name: 'call command with --dry-run shows Claude command without creating session',
   async fn() {
     await cleanupTestSession();
 
@@ -104,7 +104,7 @@ Deno.test({
       const cmd = new Deno.Command('deno', {
         args: [
           'run', '--allow-all', 'startup.ts',
-          'prospect', 'surveyor',
+          'call', 'designer',
           '--claim', TEST_CLAIM_ID,
           '--task', 'Test task',
           '--dry-run',
@@ -131,18 +131,18 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'prospect command creates new tmux session when none exists',
+  name: 'call command creates new tmux session when none exists',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
     await cleanupTestSession();
 
     try {
-      // Run prospect command with --background to not attach
+      // Run call command with --background to not attach
       const cmd = new Deno.Command('deno', {
         args: [
           'run', '--allow-all', 'startup.ts',
-          'prospect', 'surveyor',
+          'call', 'designer',
           '--claim', TEST_CLAIM_ID,
           '--task', 'Test task',
           '--background',
@@ -162,11 +162,11 @@ Deno.test({
       const info = await getSessionInfo(TEST_SESSION);
       assertEquals(info.exists, true, 'Session should exist');
 
-      // Should have the surveyor window
+      // Should have the designer window
       assertEquals(
-        info.windows.some((w) => w.includes('surveyor')),
+        info.windows.some((w) => w.includes('designer')),
         true,
-        `Should have surveyor window. Windows: ${info.windows.join(', ')}`,
+        `Should have designer window. Windows: ${info.windows.join(', ')}`,
       );
     } finally {
       await cleanupTestSession();
@@ -175,7 +175,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'prospect command adds window to existing session',
+  name: 'call command adds window to existing session',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
@@ -189,11 +189,11 @@ Deno.test({
       const initialInfo = await getSessionInfo(TEST_SESSION);
       assertEquals(initialInfo.windowCount, 1, 'Should have 1 window initially');
 
-      // Now add a second prospect
+      // Now add a second call
       const cmd = new Deno.Command('deno', {
         args: [
           'run', '--allow-all', 'startup.ts',
-          'prospect', 'miner',
+          'call', 'engineer',
           '--claim', TEST_CLAIM_ID,
           '--task', 'Second task',
           '--background',
@@ -207,7 +207,7 @@ Deno.test({
 
       // Should now have 2 windows
       const finalInfo = await getSessionInfo(TEST_SESSION);
-      assertEquals(finalInfo.windowCount, 2, 'Should have 2 windows after adding prospect');
+      assertEquals(finalInfo.windowCount, 2, 'Should have 2 windows after adding call');
 
       // Verify window names
       assertEquals(
@@ -216,9 +216,9 @@ Deno.test({
         'Should still have initial window',
       );
       assertEquals(
-        finalInfo.windows.some((w) => w.includes('miner')),
+        finalInfo.windows.some((w) => w.includes('engineer')),
         true,
-        'Should have miner window',
+        'Should have engineer window',
       );
     } finally {
       await cleanupTestSession();

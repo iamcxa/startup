@@ -1,7 +1,7 @@
 // tests/e2e/delegation-flow.test.ts
 /**
  * E2E test for the full delegation flow.
- * Tests: Trail Boss → SPAWN surveyor → tmux window created
+ * Tests: Trail Boss → SPAWN designer → tmux window created
  */
 
 import { assertEquals } from '@std/assert';
@@ -63,7 +63,7 @@ async function listTmuxWindows(sessionName: string): Promise<string[]> {
 }
 
 Deno.test({
-  name: 'E2E: prospect command adds window to existing caravan session',
+  name: 'E2E: call command adds window to existing caravan session',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
@@ -75,14 +75,14 @@ Deno.test({
       const created = await createTmuxSession(sessionName, 'trail-boss');
       assertEquals(created, true, 'Should create initial session');
 
-      // Step 2: Spawn surveyor (simulating SPAWN command)
+      // Step 2: Spawn designer (simulating SPAWN command)
       const cmd = new Deno.Command('deno', {
         args: [
           'run',
           '--allow-all',
           'startup.ts',
-          'prospect',
-          'surveyor',
+          'call',
+          'designer',
           '--claim',
           claimId,
           '--task',
@@ -95,25 +95,25 @@ Deno.test({
       });
 
       const { success } = await cmd.output();
-      assertEquals(success, true, 'Prospect command should succeed');
+      assertEquals(success, true, 'Call command should succeed');
 
-      // Step 3: Verify surveyor window exists
+      // Step 3: Verify designer window exists
       const windows = await listTmuxWindows(sessionName);
       assertEquals(windows.length, 2, 'Should have 2 windows');
       assertEquals(
-        windows.includes('surveyor'),
+        windows.includes('designer'),
         true,
-        'Should have surveyor window',
+        'Should have designer window',
       );
 
-      // Step 4: Spawn miner
+      // Step 4: Spawn engineer
       const cmd2 = new Deno.Command('deno', {
         args: [
           'run',
           '--allow-all',
           'startup.ts',
-          'prospect',
-          'miner',
+          'call',
+          'engineer',
           '--claim',
           claimId,
           '--task',
@@ -127,13 +127,13 @@ Deno.test({
 
       await cmd2.output();
 
-      // Step 5: Verify miner window exists
+      // Step 5: Verify engineer window exists
       const finalWindows = await listTmuxWindows(sessionName);
       assertEquals(finalWindows.length, 3, 'Should have 3 windows');
       assertEquals(
-        finalWindows.includes('miner'),
+        finalWindows.includes('engineer'),
         true,
-        'Should have miner window',
+        'Should have engineer window',
       );
     } finally {
       await cleanupTmuxSession(sessionName);
@@ -143,7 +143,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'E2E: prospect creates new session when none exists',
+  name: 'E2E: call creates new session when none exists',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
@@ -151,14 +151,14 @@ Deno.test({
     const sessionName = `startup-${claimId}`;
 
     try {
-      // Spawn surveyor without existing session
+      // Spawn designer without existing session
       const cmd = new Deno.Command('deno', {
         args: [
           'run',
           '--allow-all',
           'startup.ts',
-          'prospect',
-          'surveyor',
+          'call',
+          'designer',
           '--claim',
           claimId,
           '--task',
@@ -171,7 +171,7 @@ Deno.test({
       });
 
       const { success } = await cmd.output();
-      assertEquals(success, true, 'Prospect command should succeed');
+      assertEquals(success, true, 'Call command should succeed');
 
       // Verify session was created
       const checkCmd = new Deno.Command('tmux', {
@@ -182,13 +182,13 @@ Deno.test({
       const checkResult = await checkCmd.output();
       assertEquals(checkResult.success, true, 'Session should exist');
 
-      // Verify surveyor window exists
+      // Verify designer window exists
       const windows = await listTmuxWindows(sessionName);
       assertEquals(windows.length, 1, 'Should have 1 window');
       assertEquals(
-        windows.includes('surveyor'),
+        windows.includes('designer'),
         true,
-        'Should have surveyor window',
+        'Should have designer window',
       );
     } finally {
       await cleanupTmuxSession(sessionName);
