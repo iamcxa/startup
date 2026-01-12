@@ -1,7 +1,7 @@
 // tests/e2e/delegation-flow.test.ts
 /**
  * E2E test for the full delegation flow.
- * Tests: Trail Boss → SPAWN designer → tmux window created
+ * Tests: CTO → SPAWN designer → tmux window created
  */
 
 import { assertEquals } from '@std/assert';
@@ -71,8 +71,8 @@ Deno.test({
     const sessionName = `startup-${claimId}`;
 
     try {
-      // Step 1: Create initial session (simulating Trail Boss)
-      const created = await createTmuxSession(sessionName, 'trail-boss');
+      // Step 1: Create initial session (simulating CTO)
+      const created = await createTmuxSession(sessionName, 'cto');
       assertEquals(created, true, 'Should create initial session');
 
       // Step 2: Spawn designer (simulating SPAWN command)

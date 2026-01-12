@@ -6,9 +6,9 @@ import type { BehaviorTest } from "../../src/bq-test/types.ts";
 // Define test cases directly (in real impl, load from YAML)
 const campBossTest: BehaviorTest = {
   scenario: {
-    name: "camp-boss-spawns-designer",
-    description: "Camp Boss receives implementation request and spawns Surveyor",
-    agent: "camp-boss",
+    name: "cto-spawns-designer",
+    description: "CTO receives implementation request and spawns Surveyor",
+    agent: "cto",
     input: "User: I need to add user authentication to the application.",
   },
   expectations: {
@@ -22,7 +22,7 @@ const campBossTest: BehaviorTest = {
       forbidden: ["ERROR:"],
     },
     judge: {
-      criteria: "Camp Boss should delegate to Surveyor, not implement directly",
+      criteria: "CTO should delegate to Surveyor, not implement directly",
       minScore: 7,
     },
   },
@@ -54,7 +54,7 @@ const pmAgentTest: BehaviorTest = {
   },
 };
 
-Deno.test("BQ Test Suite: Camp Boss and PM Agent", async () => {
+Deno.test("BQ Test Suite: CTO and PM Agent", async () => {
   const result = await runTestSuite(
     [campBossTest, pmAgentTest],
     "Core Agent Behaviors",
@@ -78,9 +78,9 @@ Deno.test("BQ Test Suite: Camp Boss and PM Agent", async () => {
   assertGreater(result.passRate, 90, "BQ pass rate should be > 90%");
 });
 
-Deno.test("Individual: Camp Boss spawns Surveyor", async () => {
+Deno.test("Individual: CTO spawns Surveyor", async () => {
   const result = await runBehaviorTest(campBossTest, true);
-  assertEquals(result.passed, true, "Camp Boss test should pass");
+  assertEquals(result.passed, true, "CTO test should pass");
 });
 
 Deno.test("Individual: PM Agent answers decision", async () => {

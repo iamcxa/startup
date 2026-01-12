@@ -227,14 +227,14 @@ Deno.test({
 });
 
 // ============================================================================
-// Boss Daemon Tests
+// Company Daemon Tests
 // ============================================================================
 
 Deno.test({
-  name: 'boss status command works',
+  name: 'company status command works',
   async fn() {
     const cmd = new Deno.Command('deno', {
-      args: ['run', '--allow-all', 'startup.ts', 'boss', 'status'],
+      args: ['run', '--allow-all', 'startup.ts', 'company', 'status'],
       stdout: 'piped',
       stderr: 'piped',
       cwd: Deno.cwd(),
@@ -245,21 +245,21 @@ Deno.test({
 
     assertEquals(success, true);
     assertStringIncludes(output, 'Status:');
-    assertStringIncludes(output, 'pd-boss');
+    assertStringIncludes(output, 'startup-company');
   },
 });
 
 Deno.test({
-  name: 'boss start creates pd-boss session',
+  name: 'company start creates startup-company session',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
-    // Clean up any existing boss session
-    await cleanupTestSession('pd-boss');
+    // Clean up any existing company session
+    await cleanupTestSession('startup-company');
 
     try {
       const cmd = new Deno.Command('deno', {
-        args: ['run', '--allow-all', 'startup.ts', 'boss', 'start'],
+        args: ['run', '--allow-all', 'startup.ts', 'company', 'start'],
         stdout: 'piped',
         stderr: 'piped',
         cwd: Deno.cwd(),
@@ -270,29 +270,29 @@ Deno.test({
 
       assertEquals(success, true, `Command should succeed. Output: ${output}`);
 
-      // pd-boss session should exist
-      const exists = await sessionExists('pd-boss');
-      assertEquals(exists, true, 'pd-boss session should exist');
+      // startup-company session should exist
+      const exists = await sessionExists('startup-company');
+      assertEquals(exists, true, 'startup-company session should exist');
     } finally {
-      await cleanupTestSession('pd-boss');
+      await cleanupTestSession('startup-company');
     }
   },
 });
 
 Deno.test({
-  name: 'boss stop kills pd-boss session',
+  name: 'company stop kills startup-company session',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
-    // First create the boss session
-    await createTestSession('pd-boss', 'camp-boss');
+    // First create the company session
+    await createTestSession('startup-company', 'cto');
 
-    const existsBefore = await sessionExists('pd-boss');
-    assertEquals(existsBefore, true, 'pd-boss should exist before stop');
+    const existsBefore = await sessionExists('startup-company');
+    assertEquals(existsBefore, true, 'startup-company should exist before stop');
 
-    // Stop the boss
+    // Stop the company
     const cmd = new Deno.Command('deno', {
-      args: ['run', '--allow-all', 'startup.ts', 'boss', 'stop'],
+      args: ['run', '--allow-all', 'startup.ts', 'company', 'stop'],
       stdout: 'piped',
       stderr: 'piped',
       cwd: Deno.cwd(),
@@ -300,9 +300,9 @@ Deno.test({
 
     await cmd.output();
 
-    // pd-boss should no longer exist
-    const existsAfter = await sessionExists('pd-boss');
-    assertEquals(existsAfter, false, 'pd-boss should not exist after stop');
+    // startup-company should no longer exist
+    const existsAfter = await sessionExists('startup-company');
+    assertEquals(existsAfter, false, 'startup-company should not exist after stop');
   },
 });
 
@@ -344,7 +344,7 @@ Deno.test({
   async fn() {
     // Kill all startup sessions first
     await cleanupTestSession();
-    await cleanupTestSession('pd-boss');
+    await cleanupTestSession('startup-company');
 
     // Kill any other startup sessions
     const listCmd = new Deno.Command('tmux', {

@@ -88,14 +88,14 @@ Deno.test({
   async fn() {
     // trail-boss with a simple task (no nested quotes)
     const result = await runHookWithInput(
-      'bd comments add pd-boss "SPAWN: trail-boss --task Build-auth-system"',
+      'bd comments add startup-company "SPAWN: trail-boss --task Build-auth-system"',
       {
         STARTUP_BIN: 'echo',
-        STARTUP_BD: 'pd-boss',
+        STARTUP_BD: 'startup-company',
       },
     );
     assertEquals(result.success, true);
-    assertStringIncludes(result.stdout, 'stake');
+    assertStringIncludes(result.stdout, 'kickoff');
   },
 });
 
@@ -134,10 +134,10 @@ Deno.test({
   name: 'hook handles SPAWN with --claim to different caravan',
   async fn() {
     const result = await runHookWithInput(
-      'bd comments add pd-boss "SPAWN: miner --claim pd-other"',
+      'bd comments add startup-company "SPAWN: miner --claim pd-other"',
       {
         STARTUP_BIN: 'echo',
-        STARTUP_BD: 'pd-boss',
+        STARTUP_BD: 'startup-company',
       },
     );
     assertEquals(result.success, true);

@@ -28,27 +28,27 @@ const realConfig: RealModeConfig = {
 // ============================================================================
 
 /**
- * Test: Camp Boss should spawn Surveyor when given implementation request
+ * Test: CTO should spawn Surveyor when given implementation request
  *
  * Expected behavior:
- * - Camp Boss receives user request
+ * - CTO receives user request
  * - Does NOT write code directly
  * - Spawns Surveyor agent via "SPAWN: designer" comment
  * - Exits cleanly
  */
 const campBossTest: BehaviorTest = {
   scenario: {
-    name: "camp-boss-spawns-designer",
-    description: "Camp Boss receives implementation request and spawns Surveyor",
-    agent: "camp-boss",
-    input: `You are Camp Boss. A user wants to add user authentication.
+    name: "cto-spawns-designer",
+    description: "CTO receives implementation request and spawns Surveyor",
+    agent: "cto",
+    input: `You are CTO. A user wants to add user authentication.
 
 Your task: Analyze this request and delegate to the appropriate agent.
 
 User request: "I need to add user authentication to the application."
 
 Remember:
-- You are Camp Boss - you delegate, you don't implement
+- You are CTO - you delegate, you don't implement
 - Use superpowers:brainstorming if needed
 - Spawn designer for design work
 - Output "SPAWN: designer --task <description>" to delegate
@@ -63,10 +63,10 @@ After deciding, output your delegation and exit.`,
     },
     labels: {
       required: ["SPAWN:"],
-      forbidden: ["ERROR:", "Write(", "Edit("], // Camp Boss shouldn't write code
+      forbidden: ["ERROR:", "Write(", "Edit("], // CTO shouldn't write code
     },
     judge: {
-      criteria: "Camp Boss should delegate to Surveyor, not implement directly",
+      criteria: "CTO should delegate to Surveyor, not implement directly",
       minScore: 7,
     },
   },
@@ -136,11 +136,11 @@ Remember: You answer and exit. Do NOT spawn other agents.`,
 
 // Individual tests - can be run selectively
 Deno.test({
-  name: "REAL: Camp Boss spawns Surveyor",
+  name: "REAL: CTO spawns Surveyor",
   ignore: Deno.env.get("RUN_REAL_BQ_TESTS") !== "1",
   async fn() {
     console.log("\n========================================");
-    console.log("REAL TEST: Camp Boss spawns Surveyor");
+    console.log("REAL TEST: CTO spawns Surveyor");
     console.log("========================================\n");
 
     const result = await runRealBehaviorTest(campBossTest, realConfig);
@@ -156,7 +156,7 @@ Deno.test({
       console.log(result.rawOutput.slice(0, 2000));
     }
 
-    assertEquals(result.passed, true, "Camp Boss test should pass");
+    assertEquals(result.passed, true, "CTO test should pass");
   },
 });
 

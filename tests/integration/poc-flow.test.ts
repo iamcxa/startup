@@ -33,9 +33,9 @@ Deno.test('POC Integration: Hook dispatcher parses bd comments correctly', async
   assertEquals(oAction.type, 'notify');
 });
 
-Deno.test('POC Integration: Boss command returns correct status', async () => {
+Deno.test('POC Integration: Company command returns correct status', async () => {
   const cmd = new Deno.Command('deno', {
-    args: ['run', '--allow-all', 'startup.ts', 'boss', 'status'],
+    args: ['run', '--allow-all', 'startup.ts', 'company', 'status'],
     stdout: 'piped',
     stderr: 'piped',
     cwd: Deno.cwd(),
