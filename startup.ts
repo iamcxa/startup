@@ -63,8 +63,11 @@ function printHelp(): void {
 Startup v${VERSION} - Multi-agent orchestrator
 
 Usage:
-  startup call <role> "task"
-  st call <role> "task"
+  startup call <role> "task"       Start an agent
+  startup kickoff "task"           Create a team and start collaboration
+  startup company start|stop|status Manage company daemon
+  startup list                     List all teams
+  startup attach [team]            Attach to a team session
 
 Roles:
   cto        Technical decisions, architecture design
@@ -86,6 +89,8 @@ Examples:
   startup call cto "Design authentication architecture"
   st call engineer "Implement login feature"
   st call qa "Verify login flow"
+  startup kickoff "Build user authentication"
+  startup company start
 `);
 }
 
@@ -167,6 +172,38 @@ async function main(): Promise<void> {
         model: args.model as string,
         claimId: args.claim as string,
       });
+      break;
+    }
+    case 'kickoff': {
+      const task = args._[1] as string;
+      if (!task) {
+        console.error('Error: Task description required');
+        console.error('Usage: startup kickoff "task"');
+        Deno.exit(1);
+      }
+      const { stakeCommand } = await import('./src/startup/cli/mod.ts');
+      await stakeCommand({ task, dryRun: args['dry-run'] });
+      break;
+    }
+    case 'company': {
+      const subcommand = args._[1] as string;
+      if (!subcommand || !['start', 'stop', 'status'].includes(subcommand)) {
+        console.error('Error: Subcommand required (start|stop|status)');
+        console.error('Usage: startup company start|stop|status');
+        Deno.exit(1);
+      }
+      const { bossCommand } = await import('./src/startup/cli/mod.ts');
+      await bossCommand({ subcommand: subcommand as 'start' | 'stop' | 'status', dryRun: args['dry-run'] });
+      break;
+    }
+    case 'list': {
+      const { listCommand } = await import('./src/startup/cli/mod.ts');
+      await listCommand();
+      break;
+    }
+    case 'attach': {
+      const { attachCommand } = await import('./src/startup/cli/mod.ts');
+      await attachCommand({ target: args._[1] as string });
       break;
     }
     default:
