@@ -269,6 +269,169 @@ deno lint
 deno fmt
 ```
 
+## Langfuse Integration
+
+Paydirt integrates with [Langfuse](https://langfuse.com/) for tracing Claude agent executions. When enabled, all agent spawns, tool calls, and test executions are traced for debugging and observability.
+
+### Setup
+
+1. **Get Langfuse credentials** from [cloud.langfuse.com](https://cloud.langfuse.com/)
+
+2. **Create `.env.test`** for test tracing:
+
+```bash
+LANGFUSE_ENABLED=true
+LANGFUSE_DEBUG=true
+LANGFUSE_SESSION_PREFIX=test-
+LANGFUSE_SECRET_KEY=sk-lf-your-secret-key
+LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key
+LANGFUSE_BASE_URL=https://us.cloud.langfuse.com
+```
+
+3. **Create `.env`** for development tracing (optional):
+
+```bash
+LANGFUSE_ENABLED=false  # Enable when debugging
+LANGFUSE_SECRET_KEY=sk-lf-your-secret-key
+LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key
+LANGFUSE_BASE_URL=https://us.cloud.langfuse.com
+```
+
+> **Note**: `.env` and `.env.test` are gitignored. Never commit credentials to git.
+
+### Usage
+
+#### E2E Tests with Tracing
+
+```bash
+# Load test environment
+export $(cat .env.test | xargs)
+
+# Run single E2E test
+RUN_E2E_TESTS=1 deno test tests/e2e/full-chain.test.ts --allow-all
+
+# Run all E2E tests
+RUN_E2E_TESTS=1 deno test tests/e2e/ --allow-all
+```
+
+Each test creates a session ID like `{test-name}-{timestamp}` for trace grouping.
+
+#### BQ Tests with Tracing
+
+```bash
+# Load test environment
+export $(cat .env.test | xargs)
+
+# Run BQ tests (future implementation)
+deno run --allow-all src/bq-test/runner.ts
+```
+
+#### Prospect Commands with Tracing
+
+```bash
+# Load development environment
+export $(cat .env | xargs)
+export LANGFUSE_ENABLED=true
+
+# Spawn agent with tracing
+pd prospect miner --claim pd-xyz --task "Implement feature X"
+```
+
+### Debugging with Langfuse UI
+
+1. **Access Langfuse UI**: [cloud.langfuse.com](https://cloud.langfuse.com/)
+
+2. **Find test traces** by filtering:
+   - **Session ID**: `{test-name}-{timestamp}`
+   - **Tags**: `e2e`, `bq-test`, `prospect`, `{role}`
+   - **Date**: Recent traces from test execution
+
+3. **Verify trace structure**:
+   ```
+   Test Session
+   └── Test Trace
+       ├── Hook Trigger (span)
+       ├── Agent Spawn (span: prospect-miner)
+       │   └── Claude Execution (span)
+       │       ├── Tool Calls (nested)
+       │       └── bd commands (nested)
+       └── Verification (span)
+   ```
+
+4. **Check trace metadata**:
+   - **Input**: Test name, scenario, agent role, prompt
+   - **Output**: Exit code, behavior, test results
+   - **Custom fields**: claimId, testId, agent
+
+5. **Identify errors**:
+   - Error traces have `level: ERROR`
+   - Failed tests show `exitCode ≠ 0`
+   - View full conversation history for debugging
+
+For detailed verification steps, see [`docs/langfuse-ui-verification-guide.md`](docs/langfuse-ui-verification-guide.md).
+
+### CI/CD Integration
+
+Configure CI environment to enable tracing:
+
+```yaml
+# GitHub Actions example
+env:
+  LANGFUSE_ENABLED: true
+  LANGFUSE_SESSION_PREFIX: ci-
+  LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+  LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+  LANGFUSE_BASE_URL: https://us.cloud.langfuse.com
+
+- name: Run E2E Tests with Tracing
+  run: RUN_E2E_TESTS=1 deno test tests/e2e/ --allow-all
+```
+
+Use separate Langfuse projects for CI vs development to isolate traces.
+
+### Performance Impact
+
+- **Unit tests**: ~24% overhead (~40ms for utility tests)
+- **E2E tests**: Negligible (multi-minute duration)
+- **SDK initialization**: ~150-180ms (one-time startup cost)
+
+Overhead is acceptable for debugging and CI scenarios.
+
+### Troubleshooting
+
+#### No traces appearing in UI
+
+**Check**:
+1. `LANGFUSE_ENABLED=true` in environment
+2. Valid credentials in `.env.test` or `.env`
+3. Network connection to Langfuse Cloud
+4. SDK initialization logs (set `LANGFUSE_DEBUG=true`)
+
+**Debug**:
+```bash
+# Enable debug output
+export LANGFUSE_DEBUG=true
+
+# Run test and check for Langfuse messages
+RUN_E2E_TESTS=1 deno test tests/e2e/context-exhaustion.test.ts --allow-all 2>&1 | grep -i langfuse
+```
+
+#### Traces missing metadata
+
+**Likely causes**:
+- Environment variables not propagated to spawned processes
+- Check `buildPaydirtEnvVars()` includes Langfuse vars in [`src/paydirt/claude/command.ts:42-49`](src/paydirt/claude/command.ts#L42-L49)
+- Verify spawn functions call `getLangfuseEnv()` in test utilities
+
+#### Test hangs during cleanup
+
+**Solution**:
+- Ensure `cleanup()` is called in `finally` blocks
+- SDK flush may timeout if network is slow
+- Check Langfuse Cloud connectivity
+
+For more troubleshooting, see [`docs/langfuse-ui-verification-guide.md`](docs/langfuse-ui-verification-guide.md).
+
 ## POC Usage
 
 ### Quick Start
