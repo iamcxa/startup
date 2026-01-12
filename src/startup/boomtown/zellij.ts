@@ -444,6 +444,58 @@ export async function addRolePaneToTeam(
   }
 }
 
+/**
+ * Focus on a specific role pane within a team tab.
+ * Used when HUMAN_REQUIRED is detected.
+ *
+ * @param teamId - Team ID
+ * @param _role - Role name (currently unused, focuses last pane)
+ * @returns true if focus was switched successfully
+ */
+export async function focusTeamRole(
+  teamId: string,
+  _role: string,
+): Promise<boolean> {
+  try {
+    const tabName = `team-${teamId.slice(0, 8)}`;
+
+    // Switch to the team tab
+    const gotoCmd = new Deno.Command('zellij', {
+      args: ['action', 'go-to-tab-name', tabName],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+
+    const result = await gotoCmd.output();
+    if (!result.success) {
+      return false;
+    }
+
+    // Focus the last pane (most recently added, likely the one needing attention)
+    // Note: Zellij doesn't have "focus pane by name", so we focus the bottom pane
+    const focusCmd = new Deno.Command('zellij', {
+      args: ['action', 'focus-next-pane'],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+    await focusCmd.output();
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * List all team tabs in the current session.
+ * @returns Array of tab names starting with "team-"
+ */
+export async function listTeamTabs(): Promise<string[]> {
+  // Note: Zellij doesn't have a direct "list tabs" action
+  // This is a placeholder - in practice, we track tabs ourselves
+  return [];
+}
+
 // ============================================================================
 // Utility Functions
 // ============================================================================
