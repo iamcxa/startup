@@ -36,12 +36,19 @@ export { generateCampBossScriptContent } from './camp-boss-pane.ts';
 // Zellij integration
 export {
   addCaravanTab,
+  addRolePaneToTeam,
+  addTeamTab,
   attachSession,
   BOOMTOWN_SESSION,
   createSession,
+  CTO_TAB_NAME,
+  CTO_TMUX_SESSION,
+  focusTeamRole,
   generateBoomtownLayout,
+  listTeamTabs,
   removeCaravanTab,
   sessionExists,
+  STARTUP_SESSION,
 } from './zellij.ts';
 
 export { launchZellijBoomtown } from './zellij-dashboard.ts';
