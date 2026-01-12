@@ -112,6 +112,7 @@ export function getLangfuseEnv(context?: LangfuseTestContext): Record<string, st
  * - langfuse.session.id: Groups all spans into a Langfuse Session
  * - langfuse.trace.name: Sets the trace name in Langfuse UI
  * - langfuse.tags: Tags for filtering in Langfuse UI
+ * - langfuse.observation.input/output: Input and output for the span
  *
  * See: https://langfuse.com/integrations/native/opentelemetry
  */
@@ -120,6 +121,10 @@ export async function withTestSpan<T>(
   spanName: string,
   attributes: Record<string, string | number | boolean>,
   fn: () => Promise<T>,
+  options?: {
+    input?: string | Record<string, unknown>;
+    captureOutput?: boolean;
+  },
 ): Promise<T> {
   if (!context.enabled) {
     return await fn();
@@ -141,9 +146,25 @@ export async function withTestSpan<T>(
         ...attributes,
       });
 
+      // Set input if provided
+      if (options?.input) {
+        const inputStr = typeof options.input === "string"
+          ? options.input
+          : JSON.stringify(options.input);
+        span.setAttribute("langfuse.observation.input", inputStr);
+      }
+
       debugLog(`Span started: ${spanName}`, { session: context.sessionId, ...attributes });
 
       const result = await fn();
+
+      // Capture output if enabled
+      if (options?.captureOutput && result !== undefined) {
+        const outputStr = typeof result === "string"
+          ? result
+          : JSON.stringify(result);
+        span.setAttribute("langfuse.observation.output", outputStr);
+      }
 
       span.setStatus({ code: SpanStatusCode.OK });
       debugLog(`Span completed: ${spanName}`);

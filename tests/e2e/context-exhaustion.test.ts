@@ -49,6 +49,9 @@ async function bd(
     return execute();
   }
 
+  // Prepare input for Langfuse (the bd command being run)
+  const commandInput = `bd ${args.join(" ")}`;
+
   return withTestSpan(
     langfuse,
     spanName,
@@ -67,6 +70,10 @@ async function bd(
         });
       }
       return result;
+    },
+    {
+      input: commandInput,
+      captureOutput: true,  // Capture stdout/stderr as output
     },
   );
 }
