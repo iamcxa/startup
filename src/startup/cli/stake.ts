@@ -62,12 +62,12 @@ async function attachSession(sessionName: string): Promise<void> {
 }
 
 /**
- * Notify Boomtown dashboard of a new caravan.
+ * Notify Boomtown dashboard of a new team.
  * Writes to a notification file that the Control Room status script checks.
  */
-async function notifyNewCaravan(claimId: string, task: string): Promise<void> {
+async function notifyNewTeam(claimId: string, task: string): Promise<void> {
   const notification = `${claimId}: ${task.substring(0, 50)}`;
-  const file = '/tmp/startup-new-caravans';
+  const file = '/tmp/startup-new-teams';
 
   try {
     await Deno.writeTextFile(file, notification + '\n', { append: true });
@@ -77,10 +77,10 @@ async function notifyNewCaravan(claimId: string, task: string): Promise<void> {
 }
 
 /**
- * Create a caravan issue in beads (bd).
+ * Create a team issue in beads (bd).
  * Returns the issue ID if successful, null otherwise.
  */
-async function createCaravanIssue(task: string): Promise<string | null> {
+async function createTeamIssue(task: string): Promise<string | null> {
   const title = task.length > 60 ? task.slice(0, 57) + '...' : task;
 
   const cmd = new Deno.Command('bd', {
@@ -88,8 +88,8 @@ async function createCaravanIssue(task: string): Promise<string | null> {
       'create',
       '--title', title,
       '--type', 'task',
-      '--label', 'pd:caravan',
-      '--description', `Caravan task: ${task}`,
+      '--label', 'st:team',
+      '--description', `Team task: ${task}`,
     ],
     stdout: 'piped',
     stderr: 'piped',
@@ -98,7 +98,7 @@ async function createCaravanIssue(task: string): Promise<string | null> {
   const result = await cmd.output();
   if (!result.success) {
     const stderr = new TextDecoder().decode(result.stderr);
-    console.error('Failed to create caravan issue:', stderr);
+    console.error('Failed to create team issue:', stderr);
     return null;
   }
 
@@ -116,17 +116,17 @@ export async function stakeCommand(options: StakeOptions): Promise<void> {
 
   if (dryRun) {
     const mockId = `pd-${Date.now().toString(36)}`;
-    const caravanName = task.slice(0, 30).replace(/\s+/g, '-').toLowerCase();
+    const teamName = task.slice(0, 30).replace(/\s+/g, '-').toLowerCase();
     const sessionName = `startup-${mockId}`;
     const startupInstallDir = getStartupInstallDir();
     const userProjectDir = getUserProjectDir();
     const command = buildClaudeCommand({
       role: 'trail-boss',
       claimId: mockId,
-      caravanName,
+      caravanName: teamName,
       startupInstallDir,
       userProjectDir,
-      prompt: `You are the Trail Boss coordinating this Caravan. The task is: "${task}".`,
+      prompt: `You are the Trail Boss coordinating this Team. The task is: "${task}".`,
       tunnelPath,
       startupBinPath: getStartupBinPath(),
     });
@@ -136,16 +136,16 @@ export async function stakeCommand(options: StakeOptions): Promise<void> {
     return;
   }
 
-  // Create caravan issue in beads
-  console.log('Creating caravan issue...');
-  const claimId = await createCaravanIssue(task);
+  // Create team issue in beads
+  console.log('Creating team issue...');
+  const claimId = await createTeamIssue(task);
   if (!claimId) {
-    console.error('✗ Failed to create caravan issue in beads');
+    console.error('✗ Failed to create team issue in beads');
     Deno.exit(1);
   }
-  console.log(`✓ Created caravan: ${claimId}`);
+  console.log(`✓ Created team: ${claimId}`);
 
-  const caravanName = task.slice(0, 30).replace(/\s+/g, '-').toLowerCase();
+  const teamName = task.slice(0, 30).replace(/\s+/g, '-').toLowerCase();
   const sessionName = `startup-${claimId}`;
 
   // Build Claude command
@@ -155,10 +155,10 @@ export async function stakeCommand(options: StakeOptions): Promise<void> {
   const command = buildClaudeCommand({
     role: 'trail-boss',
     claimId,
-    caravanName,
+    caravanName: teamName,
     startupInstallDir,
     userProjectDir,
-    prompt: `You are the Trail Boss coordinating this Caravan. The task is: "${task}".`,
+    prompt: `You are the Trail Boss coordinating this Team. The task is: "${task}".`,
     tunnelPath,
     startupBinPath: getStartupBinPath(),
   });
@@ -172,7 +172,7 @@ export async function stakeCommand(options: StakeOptions): Promise<void> {
   }
 
   // Create tmux session and launch Claude
-  console.log(`\n⛏ Creating Caravan session: ${sessionName}`);
+  console.log(`\n⛏ Creating Team session: ${sessionName}`);
   const success = await createTmuxSession(sessionName, command, userProjectDir);
 
   if (!success) {
@@ -181,17 +181,17 @@ export async function stakeCommand(options: StakeOptions): Promise<void> {
   }
 
   // Notify Boomtown dashboard
-  await notifyNewCaravan(claimId, task);
+  await notifyNewTeam(claimId, task);
 
-  // Add caravan tab to Boomtown (zellij) if running
+  // Add team tab to Boomtown (zellij) if running
   if (await zellijSessionExists(BOOMTOWN_SESSION)) {
-    const added = await addCaravanTab(claimId, caravanName);
+    const added = await addCaravanTab(claimId, teamName);
     if (added) {
       console.log(`✓ Added to Boomtown dashboard`);
     }
   }
 
-  console.log(`✓ Caravan started: ${claimId}`);
+  console.log(`✓ Team started: ${claimId}`);
   console.log(`\n▶ Attaching to session...`);
   console.log(`  (Press Ctrl+b d to detach)`);
 
