@@ -10,6 +10,9 @@
 #
 # Receives tool output on stdin from Claude Code
 
+# Zellij session name for dashboard
+ZELLIJ_SESSION="startup"
+
 set -e
 
 # Only process in Startup context
@@ -28,6 +31,71 @@ run_cmd() {
   else
     "$@" &
   fi
+}
+
+# Helper to check if zellij session exists
+zellij_session_exists() {
+  zellij list-sessions 2>/dev/null | grep -q "^$1"
+}
+
+# Helper to add team tab to zellij (if session running)
+add_team_tab() {
+  local team_id="$1"
+  local tab_name="team-${team_id:0:8}"
+  local tmux_session="startup-${team_id}"
+
+  if ! zellij_session_exists "$ZELLIJ_SESSION"; then
+    return 0  # Silent success if zellij not running
+  fi
+
+  # Create new tab
+  zellij --session "$ZELLIJ_SESSION" action new-tab --name "$tab_name" 2>/dev/null || return 1
+
+  # Write attach command
+  local attach_cmd="while true; do tmux attach-session -t ${tmux_session}:lead 2>/dev/null || (echo 'Waiting for lead...' && sleep 2); done"
+  zellij --session "$ZELLIJ_SESSION" action write-chars "$attach_cmd" 2>/dev/null
+  zellij --session "$ZELLIJ_SESSION" action write 13 2>/dev/null  # Enter
+
+  return 0
+}
+
+# Helper to add role pane to team tab
+add_role_pane() {
+  local team_id="$1"
+  local role="$2"
+  local tab_name="team-${team_id:0:8}"
+  local tmux_session="startup-${team_id}"
+
+  if ! zellij_session_exists "$ZELLIJ_SESSION"; then
+    return 0
+  fi
+
+  # Switch to team tab
+  zellij --session "$ZELLIJ_SESSION" action go-to-tab-name "$tab_name" 2>/dev/null || return 1
+
+  # Create new pane (splits down)
+  zellij --session "$ZELLIJ_SESSION" action new-pane --direction down 2>/dev/null || return 1
+
+  # Write attach command
+  local attach_cmd="while true; do tmux attach-session -t ${tmux_session}:${role} 2>/dev/null || (echo 'Waiting for ${role}...' && sleep 2); done"
+  zellij --session "$ZELLIJ_SESSION" action write-chars "$attach_cmd" 2>/dev/null
+  zellij --session "$ZELLIJ_SESSION" action write 13 2>/dev/null
+
+  return 0
+}
+
+# Helper to focus team role (for HUMAN_REQUIRED)
+focus_team_role() {
+  local team_id="$1"
+  local tab_name="team-${team_id:0:8}"
+
+  if ! zellij_session_exists "$ZELLIJ_SESSION"; then
+    return 0
+  fi
+
+  # Switch to team tab
+  zellij --session "$ZELLIJ_SESSION" action go-to-tab-name "$tab_name" 2>/dev/null
+  # Focus moves to this tab automatically
 }
 
 # --- Decision Issue Detection ---
