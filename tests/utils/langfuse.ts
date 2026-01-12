@@ -204,12 +204,20 @@ export async function withAgentSpan<T>(
         "langfuse.tags": JSON.stringify(["e2e-test", "agent", "paydirt"]),
       });
 
-      // Set gen_ai semantic convention attributes for input
+      // Set Langfuse observation input (correct attribute name)
+      // Also set gen_ai attributes for model info
       span.setAttributes({
         "gen_ai.system": "claude",
         "gen_ai.request.model": input.model || "sonnet",
-        "gen_ai.prompt.0.role": input.role || "user",
-        "gen_ai.prompt.0.content": input.prompt,
+        // Langfuse-specific input attribute (JSON string)
+        "langfuse.observation.input": JSON.stringify({
+          role: input.role || "user",
+          content: input.prompt,
+        }),
+        // Also set gen_ai.prompt as fallback (JSON string format)
+        "gen_ai.prompt": JSON.stringify([
+          { role: input.role || "user", content: input.prompt },
+        ]),
       });
 
       // Add custom attributes
@@ -225,13 +233,21 @@ export async function withAgentSpan<T>(
 
       const { result, output } = await fn();
 
-      // Set gen_ai completion attributes if output is provided
+      // Set Langfuse observation output (correct attribute name)
       if (output) {
+        const truncatedOutput = output.length > 10000
+          ? output.substring(0, 10000) + "...[truncated]"
+          : output;
         span.setAttributes({
-          "gen_ai.completion.0.role": "assistant",
-          "gen_ai.completion.0.content": output.length > 10000
-            ? output.substring(0, 10000) + "...[truncated]"
-            : output,
+          // Langfuse-specific output attribute (JSON string)
+          "langfuse.observation.output": JSON.stringify({
+            role: "assistant",
+            content: truncatedOutput,
+          }),
+          // Also set gen_ai.completion as fallback (JSON string format)
+          "gen_ai.completion": JSON.stringify([
+            { role: "assistant", content: truncatedOutput },
+          ]),
         });
       }
 
