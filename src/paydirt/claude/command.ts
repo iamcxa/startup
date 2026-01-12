@@ -66,6 +66,7 @@ export interface ClaudeCommandOptions {
   dangerouslySkipPermissions?: boolean;
   print?: boolean;  // Non-interactive mode (output and exit)
   model?: string;  // Model to use (e.g., 'sonnet', 'opus', 'haiku')
+  agentPath?: string;  // Custom agent file path (overrides default prospects/{role}.md)
   extraArgs?: string[];
 }
 
@@ -85,6 +86,7 @@ export function buildClaudeCommand(options: ClaudeCommandOptions): string {
     dangerouslySkipPermissions,
     print,
     model,
+    agentPath,
     extraArgs = [],
   } = options;
 
@@ -114,8 +116,9 @@ export function buildClaudeCommand(options: ClaudeCommandOptions): string {
   // 3. Add user's project directory (main working directory)
   args.push(`--add-dir ${shellEscape(userProjectDir)}`);
 
-  // 4. Specify agent file
-  args.push(`--agent ${shellEscape(`${paydirtInstallDir}/prospects/${role}.md`)}`);
+  // 4. Specify agent file (use custom path if provided, otherwise default to prospects/{role}.md)
+  const resolvedAgentPath = agentPath || `${paydirtInstallDir}/prospects/${role}.md`;
+  args.push(`--agent ${shellEscape(resolvedAgentPath)}`);
 
   // 5. Resume flag
   if (resume) {

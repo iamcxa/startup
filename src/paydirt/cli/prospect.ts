@@ -27,6 +27,44 @@ const VALID_ROLES: ProspectRole[] = [
   'pm',  // Decision proxy agent
 ];
 
+// Startup role aliases -> internal role mapping
+const STARTUP_ROLE_MAP: Record<string, ProspectRole> = {
+  'cto': 'camp-boss',
+  'engineer': 'miner',
+  'designer': 'surveyor',  // Note: 'planner' doesn't exist, use 'surveyor'
+  'lead': 'shift-boss',    // Note: 'foreman' doesn't exist, use 'shift-boss'
+  'qa': 'canary',          // Note: 'witness' doesn't exist, use 'canary'
+  'reviewer': 'assayer',
+  'product': 'pm',
+};
+
+/**
+ * Resolve a role string to a valid ProspectRole.
+ * Accepts both internal roles and startup role aliases.
+ */
+function resolveRole(role: string): ProspectRole | null {
+  // Check if it's an internal role
+  if (VALID_ROLES.includes(role as ProspectRole)) {
+    return role as ProspectRole;
+  }
+  // Check if it's a startup role alias
+  if (role in STARTUP_ROLE_MAP) {
+    return STARTUP_ROLE_MAP[role];
+  }
+  return null;
+}
+
+/**
+ * Get startup role name from internal role (for .startup/agents/ lookup).
+ * Returns null if the internal role has no startup alias.
+ */
+function getStartupRoleName(internalRole: ProspectRole): string | null {
+  for (const [startupRole, internal] of Object.entries(STARTUP_ROLE_MAP)) {
+    if (internal === internalRole) return startupRole;
+  }
+  return null;
+}
+
 /**
  * Check if a tmux session exists.
  */
@@ -98,14 +136,16 @@ async function createTmuxSession(
 async function executeProspect(options: ProspectOptions): Promise<number> {
   const { role, task, claimId, dryRun, background, model } = options;
 
-  // Validate role
-  if (!VALID_ROLES.includes(role as ProspectRole)) {
+  // Validate and resolve role (supports both internal roles and startup aliases)
+  const prospectRole = resolveRole(role);
+  if (!prospectRole) {
     console.error(`Error: Invalid prospect role: ${role}`);
-    console.error(`Valid roles: ${VALID_ROLES.join(', ')}`);
+    console.error(`Valid roles: ${[...VALID_ROLES, ...Object.keys(STARTUP_ROLE_MAP)].join(', ')}`);
     return 1;
   }
 
-  const prospectRole = role as ProspectRole;
+  // Track original role for agent path resolution
+  const originalRole = role;
 
   // Generate claimId if not provided
   const resolvedClaimId = claimId || `pd-${Date.now().toString(36)}`;
@@ -130,6 +170,20 @@ async function executeProspect(options: ProspectOptions): Promise<number> {
   // Other agents like Miner need interactive mode for continuous work
   const isOneShotAgent = prospectRole === 'pm';
 
+  // Determine agent file path - use .startup/agents/ for startup role aliases
+  let agentPath: string | undefined;
+  // Only use startup agent path if the original role was a startup alias
+  if (originalRole in STARTUP_ROLE_MAP) {
+    // Check if .startup/agents/{startupRole}.md exists
+    const startupAgentPath = `${userProjectDir}/.startup/agents/${originalRole}.md`;
+    try {
+      await Deno.stat(startupAgentPath);
+      agentPath = startupAgentPath;
+    } catch {
+      // Fall back to default prospects/ path
+    }
+  }
+
   const claudeCommand = buildClaudeCommand({
     role: prospectRole,
     claimId: resolvedClaimId,
@@ -141,6 +195,7 @@ async function executeProspect(options: ProspectOptions): Promise<number> {
     dangerouslySkipPermissions: true,  // Enable autonomous operation
     print: background && isOneShotAgent,  // Only one-shot agents use --print
     model,  // Model to use (e.g., 'sonnet', 'opus', 'haiku')
+    agentPath,  // Use startup agent if available
   });
 
   if (dryRun) {
