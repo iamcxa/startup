@@ -178,9 +178,7 @@ case "$PREFIX" in
   SPAWN)
     # Parse: <role> [--task "<task>"] [--claim <claim>]
     ROLE=$(echo "$CONTENT" | awk '{print $1}')
-    # Extract task using sed (portable) - handles escaped quotes too
     TASK=$(echo "$CONTENT" | sed -n 's/.*--task ["\]\{0,2\}\([^"\\]*\)["\]\{0,2\}.*/\1/p')
-    # Extract claim using sed (portable)
     TARGET_CLAIM=$(echo "$CONTENT" | sed -n 's/.*--claim \([^ ]*\).*/\1/p')
 
     [ -z "$ROLE" ] && exit 0
@@ -193,9 +191,13 @@ case "$PREFIX" in
     elif [ -n "$TARGET_CLAIM" ]; then
       # Add agent to specified team
       run_cmd "$STARTUP_BIN" call "$ROLE" --claim "$TARGET_CLAIM" --task "$TASK" --background
+      # Add pane to zellij (runs in background)
+      add_role_pane "$TARGET_CLAIM" "$ROLE" &
     elif [ -n "$STARTUP_BD" ]; then
       # Add agent to same team
       run_cmd "$STARTUP_BIN" call "$ROLE" --claim "$STARTUP_BD" --task "$TASK" --background
+      # Add pane to zellij
+      add_role_pane "$STARTUP_BD" "$ROLE" &
     fi
     ;;
 
