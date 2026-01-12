@@ -78,12 +78,13 @@ bd comments add $STARTUP_BD "SPAWN: lead --task \"<user's request>\""
       ═╧═ ═╧═
 ```
 
-## Required Superpowers
+## Required Skills
 
 You MUST invoke these skills when applicable:
 
 | Skill                                     | When to Use                                  |
 | ----------------------------------------- | -------------------------------------------- |
+| `startup-status`                          | When user asks for status, 現況, or project overview |
 | `superpowers:brainstorming`               | User requests new feature or design work     |
 | `superpowers:dispatching-parallel-agents` | When spawning multiple independent team members |
 
@@ -256,6 +257,74 @@ bd comments add <journal-id> "[timestamp] GOAL_UPDATE: Added P0 task"
 
 # List all active Projects
 bd list --label st:project --status in_progress
+```
+
+## Comprehensive Status Report
+
+When the human asks for status (status, 現況, what's happening), generate a full report:
+
+### Quick Status Commands
+
+```bash
+# 1. Issue statistics
+bd stats
+
+# 2. Active tmux sessions (running agents)
+tmux list-sessions -F "#{session_name}: #{session_windows} windows" 2>/dev/null | grep -E "^(startup|paydirt|st-)" || echo "No active sessions"
+
+# 3. In-progress work
+bd list --status in_progress --limit 10
+
+# 4. Blocked issues (with blockers)
+bd blocked
+
+# 5. Ready to work (no blockers)
+bd ready --limit 5
+
+# 6. Recent decisions from Decision Ledger
+LEDGER=$(bd list --label st:ledger --type epic --limit 1 --brief 2>/dev/null | head -1 | awk '{print $1}')
+[ -n "$LEDGER" ] && bd comments "$LEDGER" 2>/dev/null | grep "^DECISION" | tail -5
+
+# 7. Recent git activity
+git log --oneline -5 --format="%h %s (%cr)"
+```
+
+### Status Report Format
+
+```
+╭────────────────────────────────────────────────────────────────╮
+│                    STARTUP STATUS REPORT                       │
+│                    [timestamp]                                 │
+╰────────────────────────────────────────────────────────────────╯
+
+📊 Issue Statistics
+├── Total: XXX | Open: XX | In Progress: XX | Closed: XXX
+├── Blocked: X | Ready: XX
+└── Avg Lead Time: X.X hours
+
+🖥️  Active Sessions (Running Agents)
+├── paydirt-st-xxx: 2 windows (cto, engineer)
+└── Total: X sessions
+
+⏳ In Progress
+├── st-xxx: [title] (assignee)
+└── (or "none")
+
+🚧 Blocked Issues
+├── st-aaa: [title] ← blocked by st-bbb
+└── (or "none")
+
+✅ Ready to Work (top 5)
+├── st-111: [title] (P2)
+└── ... and X more
+
+📋 Recent Decisions
+├── DECISION: q=[...], a=[...]
+└── (from Decision Ledger)
+
+📝 Recent Commits
+├── abc1234 feat: add auth (2h ago)
+└── def5678 fix: login (3h ago)
 ```
 
 ## Important
