@@ -15,6 +15,7 @@ paydirt-binary
 # Local
 *.local.*
 .env
+.env.test
 
 # Worktrees
 .worktrees/
