@@ -39,6 +39,15 @@ export function buildPaydirtEnvVars(options: EnvVarsOptions): Record<string, str
     vars.PAYDIRT_AGENT_ID = options.agentId;
   }
 
+  // Pass Langfuse environment variables to spawned Claude processes
+  if (Deno.env.get("LANGFUSE_ENABLED") === "true") {
+    vars.LANGFUSE_ENABLED = "true";
+    vars.LANGFUSE_SESSION_ID = Deno.env.get("LANGFUSE_SESSION_ID") || "";
+    vars.LANGFUSE_SECRET_KEY = Deno.env.get("LANGFUSE_SECRET_KEY") || "";
+    vars.LANGFUSE_PUBLIC_KEY = Deno.env.get("LANGFUSE_PUBLIC_KEY") || "";
+    vars.LANGFUSE_BASE_URL = Deno.env.get("LANGFUSE_BASE_URL") || "";
+  }
+
   return vars;
 }
 
