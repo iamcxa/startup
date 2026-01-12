@@ -28,13 +28,13 @@ import {
 // ============================================================================
 
 Deno.test('mprocs config includes all required sections', () => {
-  const caravans: DashboardCaravanInfo[] = [
-    { id: 'pd-001', name: 'Test Caravan', status: 'running' },
+  const teams: DashboardCaravanInfo[] = [
+    { id: 'st-001', name: 'Test Team', status: 'running' },
   ];
   const config = generateMprocsConfig(
-    caravans,
+    teams,
     '/tmp/status.sh',
-    new Map([['pd-001', '/tmp/caravan.sh']]),
+    new Map([['st-001', '/tmp/team.sh']]),
     '/tmp/camp-boss.sh',
   );
 
@@ -50,35 +50,35 @@ Deno.test('mprocs config includes all required sections', () => {
   assertStringIncludes(config, 'CAMP BOSS');
 });
 
-Deno.test('mprocs config includes Caravan panes with correct status glyphs', () => {
-  const caravans: DashboardCaravanInfo[] = [
-    { id: 'pd-001', name: 'Running Caravan', status: 'running' },
-    { id: 'pd-002', name: 'Idle Caravan', status: 'idle' },
-    { id: 'pd-003', name: 'Stopped Caravan', status: 'stopped' },
+Deno.test('mprocs config includes Team panes with correct status glyphs', () => {
+  const teams: DashboardCaravanInfo[] = [
+    { id: 'st-001', name: 'Running Team', status: 'running' },
+    { id: 'st-002', name: 'Idle Team', status: 'idle' },
+    { id: 'st-003', name: 'Stopped Team', status: 'stopped' },
   ];
-  const config = generateMprocsConfig(caravans);
+  const config = generateMprocsConfig(teams);
 
   // Check status glyphs: running = ▶, idle = ◇, stopped = ■
-  assertStringIncludes(config, '▶ pd-001');
-  assertStringIncludes(config, '◇ pd-002');
-  assertStringIncludes(config, '■ pd-003');
+  assertStringIncludes(config, '▶ st-001');
+  assertStringIncludes(config, '◇ st-002');
+  assertStringIncludes(config, '■ st-003');
 });
 
-Deno.test('mprocs config shows welcome pane when no Caravans', () => {
+Deno.test('mprocs config shows welcome pane when no Teams', () => {
   const config = generateMprocsConfig([]);
 
   assertStringIncludes(config, 'WELCOME');
   assertStringIncludes(config, 'No active Caravans');
 });
 
-Deno.test('mprocs config excludes welcome pane when Caravans exist', () => {
-  const caravans: DashboardCaravanInfo[] = [
-    { id: 'pd-001', name: 'Test Caravan', status: 'running' },
+Deno.test('mprocs config excludes welcome pane when Teams exist', () => {
+  const teams: DashboardCaravanInfo[] = [
+    { id: 'st-001', name: 'Test Team', status: 'running' },
   ];
-  const config = generateMprocsConfig(caravans);
+  const config = generateMprocsConfig(teams);
 
   assertStringIncludes(config, 'CARAVAN SESSIONS');
-  // The WELCOME section header should not appear when caravans exist
+  // The WELCOME section header should not appear when teams exist
   // (Welcome is in WELCOME PANEL section, not CARAVAN SESSIONS)
   const hasCaravanSessions = config.includes('# CARAVAN SESSIONS');
   const hasWelcomePanel = config.includes('# WELCOME PANEL');
@@ -116,26 +116,26 @@ Deno.test('Control Room status script includes system panels', () => {
 });
 
 // ============================================================================
-// Caravan Pane Script Integration Tests
+// Team Pane Script Integration Tests
 // ============================================================================
 
-Deno.test('Caravan pane script includes correct session name', () => {
+Deno.test('Team pane script includes correct session name', () => {
   const script = generateCaravanScriptContent(
-    'pd-abc123',
-    'Test Caravan',
+    'st-abc123',
+    'Test Team',
     'running',
     '/usr/bin/startup',
   );
 
-  assertStringIncludes(script, 'SESSION_NAME="startup-pd-abc123"');
-  assertStringIncludes(script, 'CARAVAN_ID="pd-abc123"');
+  assertStringIncludes(script, 'SESSION_NAME="startup-st-abc123"');
+  assertStringIncludes(script, 'CARAVAN_ID="st-abc123"');
 });
 
-Deno.test('Caravan pane script includes start functionality', () => {
+Deno.test('Team pane script includes start functionality', () => {
   // Test that script includes start functionality
   const script = generateCaravanScriptContent(
-    'pd-001',
-    'Test Caravan',
+    'st-001',
+    'Test Team',
     'running',
     '/bin/startup',
   );
@@ -144,8 +144,8 @@ Deno.test('Caravan pane script includes start functionality', () => {
   assertStringIncludes(script, 'STARTUP_BIN');
 });
 
-Deno.test('Caravan pane script includes tmux attach logic', () => {
-  const script = generateCaravanScriptContent('pd-001', 'Test', 'running', '/bin/startup');
+Deno.test('Team pane script includes tmux attach logic', () => {
+  const script = generateCaravanScriptContent('st-001', 'Test', 'running', '/bin/startup');
 
   assertStringIncludes(script, 'tmux has-session');
   assertStringIncludes(script, 'tmux attach');
@@ -196,37 +196,37 @@ Deno.test('Camp Boss script includes Claude Code launch', () => {
 // ============================================================================
 
 Deno.test('mapCaravansToDashboard correctly combines status info', () => {
-  const caravans: CaravanInfo[] = [
+  const teams: CaravanInfo[] = [
     {
-      id: 'pd-001',
-      title: 'Active Caravan',
+      id: 'st-001',
+      title: 'Active Team',
       status: 'in_progress',
-      labels: ['pd:caravan'],
+      labels: ['st:team'],
       priority: 1,
       created_at: '2024-01-01T00:00:00Z',
     },
     {
-      id: 'pd-002',
-      title: 'Idle Caravan',
+      id: 'st-002',
+      title: 'Idle Team',
       status: 'open',
-      labels: ['pd:caravan'],
+      labels: ['st:team'],
       priority: 2,
       created_at: '2024-01-02T00:00:00Z',
     },
   ];
-  // pd-001 has an active tmux session, pd-002 does not
-  const tmuxSessions = ['startup-pd-001'];
+  // st-001 has an active tmux session, st-002 does not
+  const tmuxSessions = ['startup-st-001'];
 
-  const result = mapCaravansToDashboard(caravans, tmuxSessions);
+  const result = mapCaravansToDashboard(teams, tmuxSessions);
 
   assertEquals(result.length, 2);
 
-  // First caravan: has tmux session = running
-  assertEquals(result[0].id, 'pd-001');
+  // First team: has tmux session = running
+  assertEquals(result[0].id, 'st-001');
   assertEquals(result[0].status, 'running');
 
-  // Second caravan: no tmux session but open = idle
-  assertEquals(result[1].id, 'pd-002');
+  // Second team: no tmux session but open = idle
+  assertEquals(result[1].id, 'st-002');
   assertEquals(result[1].status, 'idle');
 });
 
@@ -268,12 +268,12 @@ Deno.test('hot-reload trigger file can be created and detected', async () => {
 // ============================================================================
 
 Deno.test('writeMprocsConfig creates temp directory with all scripts', async () => {
-  const caravans: DashboardCaravanInfo[] = [
-    { id: 'pd-001', name: 'Test Caravan 1', status: 'running' },
+  const teams: DashboardCaravanInfo[] = [
+    { id: 'st-001', name: 'Test Team 1', status: 'running' },
   ];
   const startupPath = '/usr/local/bin/startup';
 
-  const configPath = await writeMprocsConfig(caravans, startupPath);
+  const configPath = await writeMprocsConfig(teams, startupPath);
 
   // Verify config file exists
   const configStat = await Deno.stat(configPath);
@@ -287,22 +287,22 @@ Deno.test('writeMprocsConfig creates temp directory with all scripts', async () 
   const controlRoomStat = await Deno.stat(controlRoomPath);
   assertEquals(controlRoomStat.isFile, true);
 
-  // Verify caravan script exists
-  const caravanScriptPath = `${tempDir}/caravan-pd-001.sh`;
-  const caravanScriptStat = await Deno.stat(caravanScriptPath);
-  assertEquals(caravanScriptStat.isFile, true);
+  // Verify team script exists
+  const teamScriptPath = `${tempDir}/caravan-st-001.sh`;
+  const teamScriptStat = await Deno.stat(teamScriptPath);
+  assertEquals(teamScriptStat.isFile, true);
 
   // Clean up
   await Deno.remove(tempDir, { recursive: true });
 });
 
 Deno.test('generated scripts are executable', async () => {
-  const caravans: DashboardCaravanInfo[] = [
-    { id: 'pd-002', name: 'Executable Test', status: 'idle' },
+  const teams: DashboardCaravanInfo[] = [
+    { id: 'st-002', name: 'Executable Test', status: 'idle' },
   ];
   const startupPath = '/usr/local/bin/startup';
 
-  const configPath = await writeMprocsConfig(caravans, startupPath);
+  const configPath = await writeMprocsConfig(teams, startupPath);
   const tempDir = configPath.substring(0, configPath.lastIndexOf('/'));
 
   // Check control-room.sh is executable
@@ -312,11 +312,11 @@ Deno.test('generated scripts are executable', async () => {
   const hasExecuteBit = (controlRoomStat.mode! & 0o111) !== 0;
   assertEquals(hasExecuteBit, true);
 
-  // Check caravan script is executable
-  const caravanScriptPath = `${tempDir}/caravan-pd-002.sh`;
-  const caravanScriptStat = await Deno.stat(caravanScriptPath);
-  const caravanHasExecuteBit = (caravanScriptStat.mode! & 0o111) !== 0;
-  assertEquals(caravanHasExecuteBit, true);
+  // Check team script is executable
+  const teamScriptPath = `${tempDir}/caravan-st-002.sh`;
+  const teamScriptStat = await Deno.stat(teamScriptPath);
+  const teamHasExecuteBit = (teamScriptStat.mode! & 0o111) !== 0;
+  assertEquals(teamHasExecuteBit, true);
 
   // Clean up
   await Deno.remove(tempDir, { recursive: true });

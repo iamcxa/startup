@@ -175,7 +175,7 @@ Deno.test('dispatcher - DECISION triggers log', async () => {
     '../../src/startup/hooks/dispatcher.ts'
   );
 
-  const parsed = parseComment('DECISION: caravan=pd-123 Q: Which DB? A: PostgreSQL');
+  const parsed = parseComment('DECISION: team=st-123 Q: Which DB? A: PostgreSQL');
   assertEquals(parsed.prefix, 'DECISION');
 
   const action = getDispatchAction(parsed.prefix, parsed.content);

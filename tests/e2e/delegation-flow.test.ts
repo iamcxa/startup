@@ -63,7 +63,7 @@ async function listTmuxWindows(sessionName: string): Promise<string[]> {
 }
 
 Deno.test({
-  name: 'E2E: call command adds window to existing caravan session',
+  name: 'E2E: call command adds window to existing team session',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {

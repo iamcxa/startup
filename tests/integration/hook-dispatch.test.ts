@@ -56,7 +56,7 @@ Deno.test({
   async fn() {
     const result = await runHookWithInput(
       'echo "hello world"',
-      { STARTUP_BIN: 'echo', STARTUP_BD: 'pd-123' },
+      { STARTUP_BIN: 'echo', STARTUP_BD: 'st-123' },
     );
     assertEquals(result.success, true);
     assertEquals(result.stdout, '');
@@ -68,10 +68,10 @@ Deno.test({
   async fn() {
     // Use echo as STARTUP_BIN to capture what would be called
     const result = await runHookWithInput(
-      'bd comments add pd-123 "SPAWN: designer"',
+      'bd comments add st-123 "SPAWN: designer"',
       {
         STARTUP_BIN: 'echo',
-        STARTUP_BD: 'pd-123',
+        STARTUP_BD: 'st-123',
       },
     );
     assertEquals(result.success, true);
@@ -79,12 +79,12 @@ Deno.test({
     assertStringIncludes(result.stdout, 'call');
     assertStringIncludes(result.stdout, 'designer');
     assertStringIncludes(result.stdout, '--claim');
-    assertStringIncludes(result.stdout, 'pd-123');
+    assertStringIncludes(result.stdout, 'st-123');
   },
 });
 
 Deno.test({
-  name: 'hook handles SPAWN trail-boss for new caravan',
+  name: 'hook handles SPAWN trail-boss for new team',
   async fn() {
     // trail-boss with a simple task (no nested quotes)
     const result = await runHookWithInput(
@@ -103,10 +103,10 @@ Deno.test({
   name: 'hook handles QUESTION by spawning claim-agent',
   async fn() {
     const result = await runHookWithInput(
-      'bd comments add pd-123 "QUESTION: Which database?"',
+      'bd comments add st-123 "QUESTION: Which database?"',
       {
         STARTUP_BIN: 'echo',
-        STARTUP_BD: 'pd-123',
+        STARTUP_BD: 'st-123',
       },
     );
     assertEquals(result.success, true);
@@ -119,10 +119,10 @@ Deno.test({
   name: 'hook ignores ANSWER prefix',
   async fn() {
     const result = await runHookWithInput(
-      'bd comments add pd-123 "ANSWER: The database is PostgreSQL"',
+      'bd comments add st-123 "ANSWER: The database is PostgreSQL"',
       {
         STARTUP_BIN: 'echo',
-        STARTUP_BD: 'pd-123',
+        STARTUP_BD: 'st-123',
       },
     );
     assertEquals(result.success, true);
@@ -131,10 +131,10 @@ Deno.test({
 });
 
 Deno.test({
-  name: 'hook handles SPAWN with --claim to different caravan',
+  name: 'hook handles SPAWN with --claim to different team',
   async fn() {
     const result = await runHookWithInput(
-      'bd comments add startup-company "SPAWN: miner --claim pd-other"',
+      'bd comments add startup-company "SPAWN: miner --claim st-other"',
       {
         STARTUP_BIN: 'echo',
         STARTUP_BD: 'startup-company',
@@ -144,23 +144,23 @@ Deno.test({
     assertStringIncludes(result.stdout, 'call');
     assertStringIncludes(result.stdout, 'miner');
     assertStringIncludes(result.stdout, '--claim');
-    assertStringIncludes(result.stdout, 'pd-other');
+    assertStringIncludes(result.stdout, 'st-other');
   },
 });
 
 Deno.test({
-  name: 'hook spawns PM for pd:decision issue creation',
+  name: 'hook spawns PM for st:decision issue creation',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
-    // Test that the hook detects bd create with pd:decision label
+    // Test that the hook detects bd create with st:decision label
     // and would spawn PM agent
     const env = {
       STARTUP_BIN: 'echo', // Use echo to capture what would be executed
-      STARTUP_BD: 'pd-test123',
+      STARTUP_BD: 'st-test123',
       STARTUP_HOOK_SYNC: '1',
-      CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: Which auth?" --label pd:decision',
-      CLAUDE_TOOL_OUTPUT: 'Created issue: pd-dec456',
+      CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: Which auth?" --label st:decision',
+      CLAUDE_TOOL_OUTPUT: 'Created issue: st-dec456',
     };
 
     const hookPath = Deno.cwd() + '/hooks/post-tool-use.sh';
@@ -183,6 +183,6 @@ Deno.test({
     // Verify it would spawn PM with correct arguments
     assertEquals(output.includes('call'), true, 'Should call call command');
     assertEquals(output.includes('pm'), true, 'Should spawn PM agent');
-    assertEquals(output.includes('pd-dec456'), true, 'Should use decision issue ID');
+    assertEquals(output.includes('st-dec456'), true, 'Should use decision issue ID');
   },
 });

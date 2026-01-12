@@ -3,7 +3,7 @@
  * End-to-End tests for the POC event-driven flow.
  *
  * Tests the complete flow:
- * 1. Create test caravan (bd issue)
+ * 1. Create test team (bd issue)
  * 2. Simulate Trail Boss writing QUESTION
  * 3. Verify hook would spawn claim-agent
  * 4. Simulate Claim Agent writing ANSWER
@@ -94,8 +94,8 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
-    // Step 1: Create test caravan
-    const claimId = await createClaim('E2E Test Caravan - Full Flow');
+    // Step 1: Create test team
+    const claimId = await createClaim('E2E Test Team - Full Flow');
     assertExists(claimId, 'Should create claim');
     const sessionName = `startup-${claimId}`;
 
