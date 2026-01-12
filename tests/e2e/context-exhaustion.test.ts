@@ -10,6 +10,7 @@
 // WARNING: This test spawns real Claude agents and consumes API credits!
 
 import { assertEquals, assertStringIncludes } from "@std/assert";
+import { initLangfuseForTest, getLangfuseEnv, type LangfuseTestContext } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
 const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
@@ -84,10 +85,15 @@ async function spawnMiner(
   issueId: string,
   task: string,
   model: string = "sonnet",
+  langfuse?: LangfuseTestContext,
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   const cmd = new Deno.Command(PAYDIRT_BIN, {
     args: ["prospect", "miner", "--claim", issueId, "--task", task, "--background", "--model", model],
     cwd: WORK_DIR,
+    env: {
+      ...Deno.env.toObject(),
+      ...getLangfuseEnv(langfuse),
+    },
     stdout: "piped",
     stderr: "piped",
   });
@@ -201,6 +207,8 @@ Deno.test({
   name: "E2E P2: Context recovery after session interruption",
   ignore: Deno.env.get("RUN_E2E_TESTS") !== "1",
   async fn() {
+    const langfuse = await initLangfuseForTest("E2E P2: Context recovery after session interruption");
+
     console.log("\n" + "=".repeat(70));
     console.log("E2E TEST: P2 - Context Exhaustion & Recovery");
     console.log("=".repeat(70));
@@ -218,6 +226,8 @@ Deno.test({
       const spawn1Result = await spawnMiner(
         ctx.workIssueId,
         `Run 'mkdir -p src && echo "Task 1 complete" > src/file1.txt && git add src/file1.txt && git commit -m "test: file1" && bd comments add ${ctx.workIssueId} "PROGRESS: Task 1 done"'`,
+        "sonnet",
+        langfuse,
       );
       console.log(`  Spawn exit code: ${spawn1Result.code}`);
       assertEquals(spawn1Result.code, 0, "Miner should spawn successfully");
@@ -275,6 +285,8 @@ Deno.test({
       const spawn2Result = await spawnMiner(
         ctx.workIssueId,
         `Task 1 done (see bd comments). Run 'mkdir -p src && echo "Task 2 complete" > src/file2.txt && git add src/file2.txt && git commit -m "test: file2" && bd comments add ${ctx.workIssueId} "PROGRESS: Task 2 done after respawn"'`,
+        "sonnet",
+        langfuse,
       );
       console.log(`  Spawn exit code: ${spawn2Result.code}`);
       assertEquals(spawn2Result.code, 0, "Miner should respawn successfully");
@@ -365,6 +377,7 @@ Key findings:
 `);
     } finally {
       await cleanupTest(ctx);
+      await langfuse.cleanup();
     }
   },
 });

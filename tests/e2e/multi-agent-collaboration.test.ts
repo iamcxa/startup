@@ -13,6 +13,7 @@
 // WARNING: This test spawns multiple real Claude agents and consumes API credits!
 
 import { assertEquals, assertStringIncludes } from "@std/assert";
+import { initLangfuseForTest, getLangfuseEnv, type LangfuseTestContext } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
 const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
@@ -88,10 +89,15 @@ async function spawnAgent(
   issueId: string,
   task: string,
   model: string = "sonnet",
+  langfuse?: LangfuseTestContext,
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   const cmd = new Deno.Command(PAYDIRT_BIN, {
     args: ["prospect", role, "--claim", issueId, "--task", task, "--background", "--model", model],
     cwd: WORK_DIR,
+    env: {
+      ...Deno.env.toObject(),
+      ...getLangfuseEnv(langfuse),
+    },
     stdout: "piped",
     stderr: "piped",
   });
@@ -200,6 +206,8 @@ Deno.test({
   name: "E2E P4: Multi-agent collaboration (Miner + Assayer)",
   ignore: Deno.env.get("RUN_E2E_TESTS") !== "1",
   async fn() {
+    const langfuse = await initLangfuseForTest("E2E P4: Multi-agent collaboration (Miner + Assayer)");
+
     console.log("\n" + "=".repeat(70));
     console.log("E2E TEST: P4 - Multi-Agent Collaboration");
     console.log("=".repeat(70));
@@ -220,7 +228,7 @@ export function add(a: any, b: any): any {
 }
 ENDOFFILE' && git add src/calculator.ts && git commit -m "feat: add calculator (needs review)" && bd comments add ${ctx.workIssueId} "PROGRESS: Created calculator.ts, ready for review"`;
 
-      const spawn1Result = await spawnAgent("miner", ctx.workIssueId, phase1Task);
+      const spawn1Result = await spawnAgent("miner", ctx.workIssueId, phase1Task, "sonnet", langfuse);
       assertEquals(spawn1Result.code, 0, "Miner should spawn successfully");
       console.log("  ✓ Miner spawned for Phase 1");
 
@@ -260,7 +268,7 @@ ENDOFFILE' && git add src/calculator.ts && git commit -m "feat: add calculator (
       console.log("\n▶ Step 2.5.1: Spawning Assayer...");
       const assayerTask = `Review src/calculator.ts for type safety issues. Check for 'any' types. Add bd comment to ${ctx.workIssueId} with format: 'REVIEW: Found issues - [list issues]'`;
 
-      const spawnAssayerResult = await spawnAgent("assayer", ctx.workIssueId, assayerTask);
+      const spawnAssayerResult = await spawnAgent("assayer", ctx.workIssueId, assayerTask, "sonnet", langfuse);
       assertEquals(spawnAssayerResult.code, 0, "Assayer should spawn successfully");
       console.log("  ✓ Assayer spawned");
 
@@ -297,7 +305,7 @@ export function add(a: number, b: number): number {
 }
 ENDOFFILE' && git add src/calculator.ts && git commit -m "fix: replace any with number types" && bd comments add ${ctx.workIssueId} "FIXED: Applied Assayer feedback - replaced any with number"`;
 
-      const spawn4Result = await spawnAgent("miner", ctx.workIssueId, phase4Task);
+      const spawn4Result = await spawnAgent("miner", ctx.workIssueId, phase4Task, "sonnet", langfuse);
       assertEquals(spawn4Result.code, 0, "Miner should spawn successfully for fixes");
       console.log("  ✓ Miner spawned for Phase 4");
 
@@ -398,6 +406,7 @@ Key findings:
 `);
     } finally {
       await cleanupTest(ctx);
+      await langfuse.cleanup();
     }
   },
 });

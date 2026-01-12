@@ -14,6 +14,7 @@
 // WARNING: This test spawns multiple real Claude agents and consumes significant API credits!
 
 import { assertEquals } from "@std/assert";
+import { initLangfuseForTest, getLangfuseEnv } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
 const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
@@ -154,12 +155,14 @@ async function waitFor(
 async function triggerHookForDecision(
   decisionId: string,
   workIssueId: string,
+  langfuse?: { sessionId: string; traceName: string; enabled: boolean; cleanup: () => Promise<void> },
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   const cmd = new Deno.Command("bash", {
     args: [HOOK_SCRIPT],
     cwd: WORK_DIR,
     env: {
       ...Deno.env.toObject(),
+      ...getLangfuseEnv(langfuse),
       CLAUDE_TOOL_INPUT: `bd create --title "DECISION" --type task --label pd:decision`,
       CLAUDE_TOOL_OUTPUT: `Created issue: ${decisionId}`,
       PAYDIRT_BIN: PAYDIRT_BIN,
@@ -186,7 +189,12 @@ async function triggerHookForDecision(
 /**
  * Spawn Miner with ambiguous task
  */
-async function spawnMiner(workIssueId: string, task: string, model: string = "sonnet"): Promise<boolean> {
+async function spawnMiner(
+  workIssueId: string,
+  task: string,
+  model: string = "sonnet",
+  langfuse?: { sessionId: string; traceName: string; enabled: boolean; cleanup: () => Promise<void> },
+): Promise<boolean> {
   const cmd = new Deno.Command(PAYDIRT_BIN, {
     args: [
       "prospect", "miner",
@@ -196,6 +204,10 @@ async function spawnMiner(workIssueId: string, task: string, model: string = "so
       "--model", model,
     ],
     cwd: WORK_DIR,
+    env: {
+      ...Deno.env.toObject(),
+      ...getLangfuseEnv(langfuse),
+    },
     stdout: "piped",
     stderr: "piped",
   });
@@ -254,6 +266,8 @@ Deno.test({
   name: "E2E Full Chain: Miner → Decision → PM → Miner Resume",
   ignore: Deno.env.get("RUN_E2E_TESTS") !== "1",
   async fn() {
+    const langfuse = await initLangfuseForTest("E2E Full Chain: Miner → Decision → PM → Miner Resume");
+
     console.log("\n" + "=".repeat(60));
     console.log("E2E FULL CHAIN TEST");
     console.log("Miner → creates decision → PM answers → Miner resumes");
@@ -281,6 +295,8 @@ Deno.test({
 resume-task: Implement auth after decision"
 
 Then EXIT. Do NOT implement anything - just create the decision and exit.`,
+        "sonnet",
+        langfuse,
       );
       assertEquals(minerSpawned, true, "Miner should spawn successfully");
       console.log("  ✓ Miner spawned");
@@ -327,7 +343,7 @@ Then EXIT. Do NOT implement anything - just create the decision and exit.`,
 
       // In a real scenario, the Hook would be triggered by Claude's PostToolUse event.
       // For this test, we manually trigger the hook to simulate that event.
-      const hookResult = await triggerHookForDecision(decisionId!, ctx.workIssueId);
+      const hookResult = await triggerHookForDecision(decisionId!, ctx.workIssueId, langfuse);
       console.log(`  Hook exit code: ${hookResult.code}`);
       if (hookResult.stdout.trim()) {
         console.log(`  Hook stdout: ${hookResult.stdout.trim()}`);
@@ -395,6 +411,7 @@ Flow verified:
 
     } finally {
       await cleanupTest(ctx);
+      await langfuse.cleanup();
     }
   },
 });

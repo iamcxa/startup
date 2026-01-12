@@ -11,6 +11,7 @@
 // WARNING: This test spawns real Claude agents and consumes API credits!
 
 import { assertEquals, assertStringIncludes } from "@std/assert";
+import { initLangfuseForTest, getLangfuseEnv, type LangfuseTestContext } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
 const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
@@ -86,10 +87,15 @@ async function spawnMiner(
   issueId: string,
   task: string,
   model: string = "sonnet",
+  langfuse?: LangfuseTestContext,
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   const cmd = new Deno.Command(PAYDIRT_BIN, {
     args: ["prospect", "miner", "--claim", issueId, "--task", task, "--background", "--model", model],
     cwd: WORK_DIR,
+    env: {
+      ...Deno.env.toObject(),
+      ...getLangfuseEnv(langfuse),
+    },
     stdout: "piped",
     stderr: "piped",
   });
@@ -183,6 +189,8 @@ Deno.test({
   name: "P3 Scenario 1: PM unable to decide (UNABLE_TO_DECIDE)",
   ignore: Deno.env.get("RUN_E2E_TESTS") !== "1",
   async fn() {
+    const langfuse = await initLangfuseForTest("P3 Scenario 1: PM unable to decide (UNABLE_TO_DECIDE)");
+
     console.log("\n" + "=".repeat(70));
     console.log("P3 SCENARIO 1: PM Unable to Decide");
     console.log("=".repeat(70));
@@ -216,6 +224,8 @@ Recommendation: Use fallback option A or request more information.`,
       const spawnResult = await spawnMiner(
         ctx.workIssueId,
         `Read decision from ${ctx.decisionIssueId}. If PM unable to decide, run 'bd comments add ${ctx.workIssueId} "PROGRESS: PM could not decide, using fallback: option A"'. Otherwise follow decision.`,
+        "sonnet",
+        langfuse,
       );
       assertEquals(spawnResult.code, 0, "Miner should spawn successfully");
       console.log("  ✓ Miner spawned");
@@ -253,6 +263,7 @@ Recommendation: Use fallback option A or request more information.`,
       console.log("\n✅ Scenario 1 PASSED: Miner handled UNABLE_TO_DECIDE correctly");
     } finally {
       await cleanupTest(ctx);
+      await langfuse.cleanup();
     }
   },
 });
@@ -265,6 +276,8 @@ Deno.test({
   name: "P3 Scenario 2: PM answer with incorrect format (missing priority)",
   ignore: Deno.env.get("RUN_E2E_TESTS") !== "1",
   async fn() {
+    const langfuse = await initLangfuseForTest("P3 Scenario 2: PM answer with incorrect format (missing priority)");
+
     console.log("\n" + "=".repeat(70));
     console.log("P3 SCENARIO 2: PM Answer Missing Priority");
     console.log("=".repeat(70));
@@ -297,6 +310,8 @@ This answer intentionally omits the [high]/[medium]/[low] priority marker to tes
       const spawnResult = await spawnMiner(
         ctx.workIssueId,
         `Read decision from ${ctx.decisionIssueId}. Create src/test-p3-s2.txt with content from decision. Run 'mkdir -p src && echo "Scenario 2: Missing priority format test" > src/test-p3-s2.txt && git add src/test-p3-s2.txt && git commit -m "test(p3): scenario 2" && bd comments add ${ctx.workIssueId} "PROGRESS: Created test-p3-s2.txt"'`,
+        "sonnet",
+        langfuse,
       );
       assertEquals(spawnResult.code, 0, "Miner should spawn successfully");
       console.log("  ✓ Miner spawned");
@@ -342,6 +357,7 @@ This answer intentionally omits the [high]/[medium]/[low] priority marker to tes
       console.log("\n✅ Scenario 2 PASSED: Miner tolerated missing priority format");
     } finally {
       await cleanupTest(ctx);
+      await langfuse.cleanup();
     }
   },
 });
@@ -354,6 +370,8 @@ Deno.test({
   name: "P3 Scenario 3: Resume task execution failure",
   ignore: Deno.env.get("RUN_E2E_TESTS") !== "1",
   async fn() {
+    const langfuse = await initLangfuseForTest("P3 Scenario 3: Resume task execution failure");
+
     console.log("\n" + "=".repeat(70));
     console.log("P3 SCENARIO 3: Resume Task Execution Failure");
     console.log("=".repeat(70));
@@ -384,6 +402,8 @@ Deno.test({
       const spawnResult = await spawnMiner(
         ctx.workIssueId,
         `Run 'cat /nonexistent/invalid/path/file.txt && bd comments add ${ctx.workIssueId} "PROGRESS: Command succeeded"' OR if it fails, run 'bd comments add ${ctx.workIssueId} "ERROR: Command failed - file not found"'`,
+        "sonnet",
+        langfuse,
       );
       assertEquals(spawnResult.code, 0, "Miner should spawn successfully");
       console.log("  ✓ Miner spawned");
@@ -419,6 +439,7 @@ Deno.test({
       console.log("\n✅ Scenario 3 PASSED: Miner handled execution failure");
     } finally {
       await cleanupTest(ctx);
+      await langfuse.cleanup();
     }
   },
 });
