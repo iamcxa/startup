@@ -11,12 +11,12 @@ import type { BehaviorTest } from "../../src/bq-test/types.ts";
 
 // Get the working directory (project root)
 const WORK_DIR = Deno.cwd();
-const PAYDIRT_BIN = `${WORK_DIR}/paydirt.ts`;
+const STARTUP_BIN = `${WORK_DIR}/paydirt.ts`;
 
 // Real mode configuration
 const realConfig: RealModeConfig = {
   executorConfig: {
-    paydirtBin: PAYDIRT_BIN,
+    paydirtBin: STARTUP_BIN,
     workDir: WORK_DIR,
     timeout: 120000, // 2 minutes per test
     verbose: true,

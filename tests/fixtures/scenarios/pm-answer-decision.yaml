@@ -13,4 +13,4 @@ context:
     ## Decision Principles
     1. Use existing stack - prefer Supabase ecosystem
   environment:
-    PAYDIRT_CLAIM: "pd-dec456"
+    STARTUP_BD: "pd-dec456"

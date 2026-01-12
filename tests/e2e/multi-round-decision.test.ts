@@ -14,7 +14,7 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
 
 const WORK_DIR = Deno.cwd();
-const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
 const HOOK_SCRIPT = `${WORK_DIR}/hooks/post-tool-use.sh`;
 
 interface TestContext {
@@ -129,8 +129,8 @@ async function triggerHookForDecisionClose(
       ...Deno.env.toObject(),
       CLAUDE_TOOL_INPUT: `bd close ${decisionId}`,
       CLAUDE_TOOL_OUTPUT: `Closed ${decisionId}`,
-      PAYDIRT_BIN: PAYDIRT_BIN,
-      PAYDIRT_PROSPECT: "pm",
+      STARTUP_BIN: STARTUP_BIN,
+      STARTUP_ROLE: "pm",
     },
     stdin: "piped",
     stdout: "piped",
@@ -163,9 +163,9 @@ async function triggerHookForDecisionCreate(
       ...Deno.env.toObject(),
       CLAUDE_TOOL_INPUT: `bd create --title "DECISION" --type task --label pd:decision`,
       CLAUDE_TOOL_OUTPUT: `Created issue: ${decisionId}`,
-      PAYDIRT_BIN: PAYDIRT_BIN,
-      PAYDIRT_CLAIM: workIssueId,
-      PAYDIRT_PROSPECT: "miner",
+      STARTUP_BIN: STARTUP_BIN,
+      STARTUP_BD: workIssueId,
+      STARTUP_ROLE: "miner",
     },
     stdin: "piped",
     stdout: "piped",

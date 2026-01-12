@@ -3,17 +3,17 @@
 # PostToolUse hook - automatic agent delegation
 #
 # Environment variables (set by Claude launcher):
-#   PAYDIRT_CLAIM - Current caravan ID
-#   PAYDIRT_BIN   - Path to paydirt binary
-#   PAYDIRT_PROSPECT  - Current agent role
-#   PAYDIRT_HOOK_SYNC - If set, run synchronously (for testing)
+#   STARTUP_BD   - Current issue ID
+#   STARTUP_BIN   - Path to startup binary
+#   STARTUP_ROLE  - Current agent role
+#   STARTUP_HOOK_SYNC - If set, run synchronously (for testing)
 #
 # Receives tool output on stdin from Claude Code
 
 set -e
 
-# Only process in Paydirt context
-[ -z "$PAYDIRT_BIN" ] && exit 0
+# Only process in Startup context
+[ -z "$STARTUP_BIN" ] && exit 0
 
 # Read tool output from stdin (we don't use it, but must consume it)
 cat > /dev/null
@@ -21,9 +21,9 @@ cat > /dev/null
 # CLAUDE_TOOL_INPUT contains the Bash command that was executed
 TOOL_INPUT="${CLAUDE_TOOL_INPUT:-}"
 
-# Helper to run command (background unless PAYDIRT_HOOK_SYNC is set)
+# Helper to run command (background unless STARTUP_HOOK_SYNC is set)
 run_cmd() {
-  if [ -n "$PAYDIRT_HOOK_SYNC" ]; then
+  if [ -n "$STARTUP_HOOK_SYNC" ]; then
     "$@"
   else
     "$@" &
@@ -39,10 +39,10 @@ if echo "$TOOL_INPUT" | grep -qE "bd create.*--label[= ].*pd:decision"; then
   TOOL_OUTPUT="${CLAUDE_TOOL_OUTPUT:-}"
   DECISION_ID=$(echo "$TOOL_OUTPUT" | sed -n 's/.*Created issue:[[:space:]]*\([^[:space:]]*\).*/\1/p' | head -1)
 
-  if [ -n "$DECISION_ID" ] && [ -n "$PAYDIRT_BIN" ]; then
-    # Use PAYDIRT_MODEL env var if set, otherwise default to sonnet
-    PAYDIRT_MODEL="${PAYDIRT_MODEL:-sonnet}"
-    run_cmd "$PAYDIRT_BIN" prospect pm --claim "$DECISION_ID" --background --task "Answer decision issue $DECISION_ID" --model "$PAYDIRT_MODEL"
+  if [ -n "$DECISION_ID" ] && [ -n "$STARTUP_BIN" ]; then
+    # Use STARTUP_MODEL env var if set, otherwise default to sonnet
+    STARTUP_MODEL="${STARTUP_MODEL:-sonnet}"
+    run_cmd "$STARTUP_BIN" prospect pm --claim "$DECISION_ID" --background --task "Answer decision issue $DECISION_ID" --model "$STARTUP_MODEL"
   fi
 fi
 
@@ -65,7 +65,7 @@ if echo "$TOOL_INPUT" | grep -q "bd close"; then
       # Note: bd show --json returns array format with dependents as objects, so extract .id
       BLOCKED_ISSUE=$(echo "$ISSUE_JSON" | jq -r '.[0].dependents[0].id // empty' 2>/dev/null)
 
-      if [ -n "$BLOCKED_ISSUE" ] && [ -n "$PAYDIRT_BIN" ]; then
+      if [ -n "$BLOCKED_ISSUE" ] && [ -n "$STARTUP_BIN" ]; then
         # Get resume context from the blocked issue's comments
         # bd comments format: "[user] BLOCKED: ... | resume-task: ... at YYYY-..."
         # Known limitation: resume-task extraction only works for single-line BLOCKED comments
@@ -73,9 +73,9 @@ if echo "$TOOL_INPUT" | grep -q "bd close"; then
         # Extract resume-task, stripping the " at YYYY-MM-DD" suffix
         RESUME_TASK=$(echo "$RESUME_CONTEXT" | sed -n 's/.*resume-task:[[:space:]]*\(.*\)[[:space:]]at[[:space:]][0-9].*$/\1/p')
 
-        # Use PAYDIRT_MODEL env var if set, otherwise default to sonnet
-        PAYDIRT_MODEL="${PAYDIRT_MODEL:-sonnet}"
-        run_cmd "$PAYDIRT_BIN" prospect miner --claim "$BLOCKED_ISSUE" --task "${RESUME_TASK:-Resume work}" --background --model "$PAYDIRT_MODEL"
+        # Use STARTUP_MODEL env var if set, otherwise default to sonnet
+        STARTUP_MODEL="${STARTUP_MODEL:-sonnet}"
+        run_cmd "$STARTUP_BIN" prospect miner --claim "$BLOCKED_ISSUE" --task "${RESUME_TASK:-Resume work}" --background --model "$STARTUP_MODEL"
       fi
     fi
   fi
@@ -108,21 +108,21 @@ case "$PREFIX" in
     if [ "$ROLE" = "trail-boss" ]; then
       # Camp Boss creates new caravan
       if [ -n "$TASK" ]; then
-        run_cmd "$PAYDIRT_BIN" stake "$TASK"
+        run_cmd "$STARTUP_BIN" stake "$TASK"
       fi
     elif [ -n "$TARGET_CLAIM" ]; then
       # Add agent to specified caravan
-      run_cmd "$PAYDIRT_BIN" prospect "$ROLE" --claim "$TARGET_CLAIM" --task "$TASK" --background
-    elif [ -n "$PAYDIRT_CLAIM" ]; then
+      run_cmd "$STARTUP_BIN" prospect "$ROLE" --claim "$TARGET_CLAIM" --task "$TASK" --background
+    elif [ -n "$STARTUP_BD" ]; then
       # Add agent to same caravan
-      run_cmd "$PAYDIRT_BIN" prospect "$ROLE" --claim "$PAYDIRT_CLAIM" --task "$TASK" --background
+      run_cmd "$STARTUP_BIN" prospect "$ROLE" --claim "$STARTUP_BD" --task "$TASK" --background
     fi
     ;;
 
   QUESTION)
     # Spawn claim-agent to answer question
-    if [ -n "$PAYDIRT_CLAIM" ]; then
-      run_cmd "$PAYDIRT_BIN" prospect claim-agent --claim "$PAYDIRT_CLAIM" --background
+    if [ -n "$STARTUP_BD" ]; then
+      run_cmd "$STARTUP_BIN" prospect claim-agent --claim "$STARTUP_BD" --background
     fi
     ;;
 

@@ -19,7 +19,7 @@ async function runHookWithInput(
     env: {
       ...Deno.env.toObject(),
       ...env,
-      PAYDIRT_HOOK_SYNC: '1',
+      STARTUP_HOOK_SYNC: '1',
       CLAUDE_TOOL_INPUT: toolInput,
     },
     cwd: Deno.cwd(),
@@ -39,12 +39,12 @@ async function runHookWithInput(
 }
 
 Deno.test({
-  name: 'hook exits silently without PAYDIRT_BIN',
+  name: 'hook exits silently without STARTUP_BIN',
   async fn() {
-    // When PAYDIRT_BIN is not set, the hook should exit immediately with success
+    // When STARTUP_BIN is not set, the hook should exit immediately with success
     const result = await runHookWithInput(
       'some random output',
-      {}, // No PAYDIRT_BIN
+      {}, // No STARTUP_BIN
     );
     assertEquals(result.success, true);
     assertEquals(result.stdout, '');
@@ -56,7 +56,7 @@ Deno.test({
   async fn() {
     const result = await runHookWithInput(
       'echo "hello world"',
-      { PAYDIRT_BIN: 'echo', PAYDIRT_CLAIM: 'pd-123' },
+      { STARTUP_BIN: 'echo', STARTUP_BD: 'pd-123' },
     );
     assertEquals(result.success, true);
     assertEquals(result.stdout, '');
@@ -66,12 +66,12 @@ Deno.test({
 Deno.test({
   name: 'hook parses SPAWN comment correctly',
   async fn() {
-    // Use echo as PAYDIRT_BIN to capture what would be called
+    // Use echo as STARTUP_BIN to capture what would be called
     const result = await runHookWithInput(
       'bd comments add pd-123 "SPAWN: surveyor"',
       {
-        PAYDIRT_BIN: 'echo',
-        PAYDIRT_CLAIM: 'pd-123',
+        STARTUP_BIN: 'echo',
+        STARTUP_BD: 'pd-123',
       },
     );
     assertEquals(result.success, true);
@@ -90,8 +90,8 @@ Deno.test({
     const result = await runHookWithInput(
       'bd comments add pd-boss "SPAWN: trail-boss --task Build-auth-system"',
       {
-        PAYDIRT_BIN: 'echo',
-        PAYDIRT_CLAIM: 'pd-boss',
+        STARTUP_BIN: 'echo',
+        STARTUP_BD: 'pd-boss',
       },
     );
     assertEquals(result.success, true);
@@ -105,8 +105,8 @@ Deno.test({
     const result = await runHookWithInput(
       'bd comments add pd-123 "QUESTION: Which database?"',
       {
-        PAYDIRT_BIN: 'echo',
-        PAYDIRT_CLAIM: 'pd-123',
+        STARTUP_BIN: 'echo',
+        STARTUP_BD: 'pd-123',
       },
     );
     assertEquals(result.success, true);
@@ -121,8 +121,8 @@ Deno.test({
     const result = await runHookWithInput(
       'bd comments add pd-123 "ANSWER: The database is PostgreSQL"',
       {
-        PAYDIRT_BIN: 'echo',
-        PAYDIRT_CLAIM: 'pd-123',
+        STARTUP_BIN: 'echo',
+        STARTUP_BD: 'pd-123',
       },
     );
     assertEquals(result.success, true);
@@ -136,8 +136,8 @@ Deno.test({
     const result = await runHookWithInput(
       'bd comments add pd-boss "SPAWN: miner --claim pd-other"',
       {
-        PAYDIRT_BIN: 'echo',
-        PAYDIRT_CLAIM: 'pd-boss',
+        STARTUP_BIN: 'echo',
+        STARTUP_BD: 'pd-boss',
       },
     );
     assertEquals(result.success, true);
@@ -156,9 +156,9 @@ Deno.test({
     // Test that the hook detects bd create with pd:decision label
     // and would spawn PM agent
     const env = {
-      PAYDIRT_BIN: 'echo', // Use echo to capture what would be executed
-      PAYDIRT_CLAIM: 'pd-test123',
-      PAYDIRT_HOOK_SYNC: '1',
+      STARTUP_BIN: 'echo', // Use echo to capture what would be executed
+      STARTUP_BD: 'pd-test123',
+      STARTUP_HOOK_SYNC: '1',
       CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: Which auth?" --label pd:decision',
       CLAUDE_TOOL_OUTPUT: 'Created issue: pd-dec456',
     };

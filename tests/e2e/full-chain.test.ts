@@ -17,7 +17,7 @@ import { assertEquals } from "@std/assert";
 import { initLangfuseForTest, getLangfuseEnv } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
-const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
 const HOOK_SCRIPT = `${WORK_DIR}/hooks/post-tool-use.sh`;
 
 interface TestContext {
@@ -165,9 +165,9 @@ async function triggerHookForDecision(
       ...getLangfuseEnv(langfuse),
       CLAUDE_TOOL_INPUT: `bd create --title "DECISION" --type task --label pd:decision`,
       CLAUDE_TOOL_OUTPUT: `Created issue: ${decisionId}`,
-      PAYDIRT_BIN: PAYDIRT_BIN,
-      PAYDIRT_CLAIM: workIssueId,
-      PAYDIRT_PROSPECT: "miner",
+      STARTUP_BIN: STARTUP_BIN,
+      STARTUP_BD: workIssueId,
+      STARTUP_ROLE: "miner",
     },
     stdin: "piped",
     stdout: "piped",
@@ -195,7 +195,7 @@ async function spawnMiner(
   model: string = "sonnet",
   langfuse?: { sessionId: string; traceName: string; enabled: boolean; cleanup: () => Promise<void> },
 ): Promise<boolean> {
-  const cmd = new Deno.Command(PAYDIRT_BIN, {
+  const cmd = new Deno.Command(STARTUP_BIN, {
     args: [
       "prospect", "miner",
       "--claim", workIssueId,
@@ -417,7 +417,7 @@ Flow verified:
 });
 
 // Quick validation tests
-Deno.test("paydirt-dev.sh exists and is executable", async () => {
-  const stat = await Deno.stat(PAYDIRT_BIN);
+Deno.test("startup-dev.sh exists and is executable", async () => {
+  const stat = await Deno.stat(STARTUP_BIN);
   assertEquals(stat.isFile, true);
 });

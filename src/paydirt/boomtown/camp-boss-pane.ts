@@ -44,7 +44,7 @@ export function generateCampBossScriptContent(
 # Runs Camp Boss in tmux session so mprocs restart doesn't lose conversation
 # ========================================================================
 
-PAYDIRT_BIN="${paydirtPath}"
+STARTUP_BIN="${paydirtPath}"
 ${agentFileVar}
 ${projectRootVar}
 SESSION_NAME="paydirt-camp-boss"
@@ -115,9 +115,9 @@ start_camp_boss() {
   # Build the claude command
   local claude_cmd
   if [ -n "\$AGENT_FILE" ] && [ -f "\$AGENT_FILE" ]; then
-    claude_cmd="PAYDIRT_BIN='\$PAYDIRT_BIN' PAYDIRT_PROSPECT=camp-boss claude --agent '\$AGENT_FILE' --dangerously-skip-permissions 'Start as Camp Boss - display your character greeting and load your journal'"
+    claude_cmd="STARTUP_BIN='\$STARTUP_BIN' STARTUP_ROLE=camp-boss claude --agent '\$AGENT_FILE' --dangerously-skip-permissions 'Start as Camp Boss - display your character greeting and load your journal'"
   else
-    claude_cmd="PAYDIRT_BIN='\$PAYDIRT_BIN' PAYDIRT_PROSPECT=camp-boss claude --dangerously-skip-permissions"
+    claude_cmd="STARTUP_BIN='\$STARTUP_BIN' STARTUP_ROLE=camp-boss claude --dangerously-skip-permissions"
   fi
 
   # Create detached tmux session

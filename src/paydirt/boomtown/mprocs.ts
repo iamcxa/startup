@@ -191,7 +191,7 @@ export function generateCaravanScriptContent(
 SESSION_NAME="${sessionName}"
 CARAVAN_ID="${safeId}"
 CARAVAN_NAME="${safeName}"
-PAYDIRT_BIN="${paydirtPath}"
+STARTUP_BIN="${paydirtPath}"
 
 # Colors
 AMBER="\\033[38;5;214m"
@@ -216,7 +216,7 @@ show_waiting() {
 
 start_caravan() {
   echo -e "\\n\${AMBER}Starting caravan...\${RESET}"
-  "\$PAYDIRT_BIN" continue "\$CARAVAN_ID" &
+  "\$STARTUP_BIN" continue "\$CARAVAN_ID" &
   sleep 2
 }
 

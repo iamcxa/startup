@@ -141,7 +141,7 @@ Deno.test('Caravan pane script includes start functionality', () => {
   );
   assertStringIncludes(script, 'START');
   assertStringIncludes(script, 'start_caravan');
-  assertStringIncludes(script, 'PAYDIRT_BIN');
+  assertStringIncludes(script, 'STARTUP_BIN');
 });
 
 Deno.test('Caravan pane script includes tmux attach logic', () => {
@@ -188,7 +188,7 @@ Deno.test('Camp Boss script includes Claude Code launch', () => {
 
   assertStringIncludes(script, 'claude');
   assertStringIncludes(script, '--agent');
-  assertStringIncludes(script, 'PAYDIRT_PROSPECT=camp-boss');
+  assertStringIncludes(script, 'STARTUP_ROLE=camp-boss');
 });
 
 // ============================================================================

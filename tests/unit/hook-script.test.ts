@@ -10,7 +10,7 @@ const HOOK_SCRIPT = 'hooks/post-tool-use.sh';
 
 /**
  * Run the hook script with controlled input and environment.
- * Uses 'echo' as PAYDIRT_BIN to capture what commands would be executed.
+ * Uses 'echo' as STARTUP_BIN to capture what commands would be executed.
  */
 async function runHookWithInput(
   input: string,
@@ -48,11 +48,11 @@ async function runHookWithInput(
 // Environment Variable Tests
 // ============================================================================
 
-Deno.test('hook script - exits silently without PAYDIRT_CLAIM', async () => {
-  const input = 'bd comments add $PAYDIRT_CLAIM "QUESTION: test"';
+Deno.test('hook script - exits silently without STARTUP_BD', async () => {
+  const input = 'bd comments add $STARTUP_BD "QUESTION: test"';
   const result = await runHookWithInput(input, {
-    // No PAYDIRT_CLAIM set
-    PAYDIRT_BIN: 'echo',
+    // No STARTUP_BD set
+    STARTUP_BIN: 'echo',
   });
 
   // Should exit cleanly with no output
@@ -60,11 +60,11 @@ Deno.test('hook script - exits silently without PAYDIRT_CLAIM', async () => {
   assertEquals(result.stdout, '');
 });
 
-Deno.test('hook script - processes when PAYDIRT_CLAIM is set', async () => {
-  const input = 'bd comments add $PAYDIRT_CLAIM "QUESTION: test"';
+Deno.test('hook script - processes when STARTUP_BD is set', async () => {
+  const input = 'bd comments add $STARTUP_BD "QUESTION: test"';
   const result = await runHookWithInput(input, {
-    PAYDIRT_CLAIM: 'test-claim',
-    PAYDIRT_BIN: 'echo',
+    STARTUP_BD: 'test-claim',
+    STARTUP_BIN: 'echo',
   });
 
   // Should succeed (even if no output due to grep -oP not matching on macOS)
@@ -78,8 +78,8 @@ Deno.test('hook script - processes when PAYDIRT_CLAIM is set', async () => {
 Deno.test('hook script - ignores non-bd-comment commands', async () => {
   const input = 'git status';
   const result = await runHookWithInput(input, {
-    PAYDIRT_CLAIM: 'test-claim',
-    PAYDIRT_BIN: 'echo',
+    STARTUP_BD: 'test-claim',
+    STARTUP_BIN: 'echo',
   });
 
   // Should exit silently
@@ -90,8 +90,8 @@ Deno.test('hook script - ignores non-bd-comment commands', async () => {
 Deno.test('hook script - ignores bd commands that are not comments add', async () => {
   const input = 'bd list --status open';
   const result = await runHookWithInput(input, {
-    PAYDIRT_CLAIM: 'test-claim',
-    PAYDIRT_BIN: 'echo',
+    STARTUP_BD: 'test-claim',
+    STARTUP_BIN: 'echo',
   });
 
   assertEquals(result.success, true);

@@ -14,7 +14,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { initLangfuseForTest, getLangfuseEnv, type LangfuseTestContext } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
-const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
 
 interface TestContext {
   workIssueId: string;
@@ -89,7 +89,7 @@ async function spawnMiner(
   model: string = "sonnet",
   langfuse?: LangfuseTestContext,
 ): Promise<{ code: number; stdout: string; stderr: string }> {
-  const cmd = new Deno.Command(PAYDIRT_BIN, {
+  const cmd = new Deno.Command(STARTUP_BIN, {
     args: ["prospect", "miner", "--claim", issueId, "--task", task, "--background", "--model", model],
     cwd: WORK_DIR,
     env: {
@@ -445,7 +445,7 @@ Deno.test({
 });
 
 // Quick validation test
-Deno.test("Paydirt bin exists", async () => {
-  const stat = await Deno.stat(PAYDIRT_BIN);
-  assertEquals(stat.isFile, true, "Paydirt bin should exist");
+Deno.test("Startup bin exists", async () => {
+  const stat = await Deno.stat(STARTUP_BIN);
+  assertEquals(stat.isFile, true, "Startup bin should exist");
 });

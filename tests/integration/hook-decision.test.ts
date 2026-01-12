@@ -60,8 +60,8 @@ async function runHook(
       env: {
         ...Deno.env.toObject(),
         ...env,
-        PAYDIRT_BIN: mockBin,
-        PAYDIRT_HOOK_SYNC: "1", // Run synchronously for testing
+        STARTUP_BIN: mockBin,
+        STARTUP_HOOK_SYNC: "1", // Run synchronously for testing
       },
       stdin: "piped",
       stdout: "piped",
@@ -102,8 +102,8 @@ Deno.test("Hook spawns PM when bd create pd:decision detected", async () => {
   const result = await runHook({
     CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: OAuth vs JWT" --type task --label pd:decision --priority 1',
     CLAUDE_TOOL_OUTPUT: "Created issue: beads-dec123",
-    PAYDIRT_CLAIM: "beads-work456",
-    PAYDIRT_PROSPECT: "miner",
+    STARTUP_BD: "beads-work456",
+    STARTUP_ROLE: "miner",
   });
 
   assertEquals(result.code, 0, "Hook should exit cleanly");
@@ -124,7 +124,7 @@ Deno.test("Hook spawns PM with --label=pd:decision syntax", async () => {
   const result = await runHook({
     CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: X" --label=pd:decision',
     CLAUDE_TOOL_OUTPUT: "Created issue: beads-xyz789",
-    PAYDIRT_CLAIM: "beads-work123",
+    STARTUP_BD: "beads-work123",
   });
 
   assertEquals(result.code, 0);
@@ -137,7 +137,7 @@ Deno.test("Hook does NOT spawn PM for non-decision labels", async () => {
   const result = await runHook({
     CLAUDE_TOOL_INPUT: 'bd create --title "Regular task" --type task --label pd:task',
     CLAUDE_TOOL_OUTPUT: "Created issue: beads-task111",
-    PAYDIRT_CLAIM: "beads-work123",
+    STARTUP_BD: "beads-work123",
   });
 
   assertEquals(result.code, 0);
@@ -148,7 +148,7 @@ Deno.test("Hook does NOT spawn PM for non-decision labels", async () => {
   );
 });
 
-Deno.test("Hook does NOT spawn PM without PAYDIRT_BIN", async () => {
+Deno.test("Hook does NOT spawn PM without STARTUP_BIN", async () => {
   const tempDir = await Deno.makeTempDir({ prefix: "hook-test-nobin-" });
 
   try {
@@ -158,7 +158,7 @@ Deno.test("Hook does NOT spawn PM without PAYDIRT_BIN", async () => {
       env: {
         CLAUDE_TOOL_INPUT: 'bd create --label pd:decision --title "X"',
         CLAUDE_TOOL_OUTPUT: "Created issue: beads-dec123",
-        // No PAYDIRT_BIN set
+        // No STARTUP_BIN set
       },
       stdin: "piped",
       stdout: "piped",
@@ -170,7 +170,7 @@ Deno.test("Hook does NOT spawn PM without PAYDIRT_BIN", async () => {
     await writer.close();
     const { code } = await process.output();
 
-    assertEquals(code, 0, "Hook should exit cleanly without PAYDIRT_BIN");
+    assertEquals(code, 0, "Hook should exit cleanly without STARTUP_BIN");
   } finally {
     await Deno.remove(tempDir, { recursive: true });
   }
@@ -245,8 +245,8 @@ Deno.test("Hook respawns Miner when pd:decision closed (with real bd)", async ()
       const result = await runHook({
         CLAUDE_TOOL_INPUT: `bd close ${decisionIssueId} --reason "Decision made"`,
         CLAUDE_TOOL_OUTPUT: `Closed issue: ${decisionIssueId}`,
-        PAYDIRT_CLAIM: workIssueId,
-        PAYDIRT_PROSPECT: "pm",
+        STARTUP_BD: workIssueId,
+        STARTUP_ROLE: "pm",
       });
 
       assertEquals(result.code, 0, "Hook should exit cleanly");
@@ -308,7 +308,7 @@ Deno.test("Hook does NOT respawn for non-decision issue close", async () => {
     const result = await runHook({
       CLAUDE_TOOL_INPUT: `bd close ${issueId}`,
       CLAUDE_TOOL_OUTPUT: `Closed issue: ${issueId}`,
-      PAYDIRT_CLAIM: "beads-work123",
+      STARTUP_BD: "beads-work123",
     });
 
     assertEquals(result.code, 0, "Hook should exit cleanly");
@@ -336,7 +336,7 @@ Deno.test("Hook spawns agent from SPAWN: comment", async () => {
   const result = await runHook({
     CLAUDE_TOOL_INPUT: 'bd comments add beads-123 "SPAWN: surveyor --task Design the auth system"',
     CLAUDE_TOOL_OUTPUT: "Comment added",
-    PAYDIRT_CLAIM: "beads-convoy456",
+    STARTUP_BD: "beads-convoy456",
   });
 
   assertEquals(result.code, 0);
@@ -353,7 +353,7 @@ Deno.test("Hook handles missing CLAUDE_TOOL_OUTPUT gracefully", async () => {
   const result = await runHook({
     CLAUDE_TOOL_INPUT: 'bd create --label pd:decision --title "X"',
     // No CLAUDE_TOOL_OUTPUT
-    PAYDIRT_CLAIM: "beads-work123",
+    STARTUP_BD: "beads-work123",
   });
 
   assertEquals(result.code, 0, "Hook should exit cleanly");
@@ -369,7 +369,7 @@ Deno.test("Hook handles empty stdin", async () => {
   const result = await runHook({
     CLAUDE_TOOL_INPUT: 'bd create --label pd:decision --title "X"',
     CLAUDE_TOOL_OUTPUT: "Created issue: beads-dec123",
-    PAYDIRT_CLAIM: "beads-work123",
+    STARTUP_BD: "beads-work123",
   }, ""); // Empty stdin
 
   assertEquals(result.code, 0, "Hook should handle empty stdin");

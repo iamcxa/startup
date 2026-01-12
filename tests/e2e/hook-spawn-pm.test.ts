@@ -17,7 +17,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 const WORK_DIR = Deno.cwd();
 const HOOK_SCRIPT = `${WORK_DIR}/hooks/post-tool-use.sh`;
 // Use dev wrapper for correct path resolution (compiled binary has path issues)
-const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
 
 interface TestContext {
   decisionIssueId: string;
@@ -131,8 +131,8 @@ async function triggerHook(env: Record<string, string>): Promise<{ code: number;
     env: {
       ...Deno.env.toObject(),
       ...env,
-      PAYDIRT_BIN: PAYDIRT_BIN,
-      // Don't use PAYDIRT_HOOK_SYNC - let it run in background
+      STARTUP_BIN: STARTUP_BIN,
+      // Don't use STARTUP_HOOK_SYNC - let it run in background
     },
     stdin: "piped",
     stdout: "piped",
@@ -239,8 +239,8 @@ Deno.test({
       const hookResult = await triggerHook({
         CLAUDE_TOOL_INPUT: `bd create --title "DECISION: test" --type task --label pd:decision`,
         CLAUDE_TOOL_OUTPUT: `Created issue: ${ctx.decisionIssueId}`,
-        PAYDIRT_CLAIM: ctx.workIssueId,
-        PAYDIRT_PROSPECT: "miner",
+        STARTUP_BD: ctx.workIssueId,
+        STARTUP_ROLE: "miner",
       });
 
       console.log(`  Hook exit code: ${hookResult.code}`);
@@ -303,7 +303,7 @@ Deno.test("Hook script exists and is executable", async () => {
   assertEquals(stat.isFile, true, "Hook script should exist");
 });
 
-Deno.test("paydirt.ts exists", async () => {
-  const stat = await Deno.stat(PAYDIRT_BIN);
-  assertEquals(stat.isFile, true, "paydirt.ts should exist");
+Deno.test("startup binary exists", async () => {
+  const stat = await Deno.stat(STARTUP_BIN);
+  assertEquals(stat.isFile, true, "startup binary should exist");
 });

@@ -13,11 +13,11 @@ import { runRealBehaviorTest, type RealModeConfig } from "../../src/bq-test/runn
 import type { BehaviorTest } from "../../src/bq-test/types.ts";
 
 const WORK_DIR = Deno.cwd();
-const PAYDIRT_BIN = `${WORK_DIR}/paydirt.ts`;
+const STARTUP_BIN = `${WORK_DIR}/paydirt.ts`;
 
 const realConfig: RealModeConfig = {
   executorConfig: {
-    paydirtBin: PAYDIRT_BIN,
+    paydirtBin: STARTUP_BIN,
     workDir: WORK_DIR,
     timeout: 180000, // 3 minutes - Miner may need more time
     verbose: true,
@@ -123,7 +123,7 @@ const minerCreatesDecisionTest: BehaviorTest = {
     name: "miner-creates-decision-for-ambiguous-task",
     description: "Miner creates pd:decision when encountering architectural ambiguity",
     agent: "miner",
-    input: `You are a Miner. Your work issue is: $PAYDIRT_CLAIM
+    input: `You are a Miner. Your work issue is: $STARTUP_BD
 
 Your task: Implement user authentication for the application.
 
@@ -142,8 +142,8 @@ As a Miner, you follow the Decision Blocking protocol:
 EXECUTE the following steps NOW using the bd CLI or beads MCP tools:
 
 1. Run: bd create --title "DECISION: Which auth method?" --type task --label pd:decision --priority 1
-2. Run: bd dep add $PAYDIRT_CLAIM <new-decision-id>
-3. Run: bd comments add $PAYDIRT_CLAIM "BLOCKED: waiting for decision\\nresume-task: Implement auth after decision"
+2. Run: bd dep add $STARTUP_BD <new-decision-id>
+3. Run: bd comments add $STARTUP_BD "BLOCKED: waiting for decision\\nresume-task: Implement auth after decision"
 
 Actually run these commands. Do NOT just describe them.`,
   },
@@ -185,7 +185,7 @@ const minerNoDecisionForClearTaskTest: BehaviorTest = {
     name: "miner-no-decision-for-clear-task",
     description: "Miner does NOT create pd:decision for clear, unambiguous tasks",
     agent: "miner",
-    input: `You are a Miner. Your work issue is: $PAYDIRT_CLAIM
+    input: `You are a Miner. Your work issue is: $STARTUP_BD
 
 Your task: Add a console.log statement to print "Hello World" in the main function.
 
@@ -250,7 +250,7 @@ Deno.test({
         scenario: {
           ...minerCreatesDecisionTest.scenario,
           input: minerCreatesDecisionTest.scenario.input.replace(
-            "$PAYDIRT_CLAIM",
+            "$STARTUP_BD",
             workIssueId,
           ),
         },
@@ -327,7 +327,7 @@ Deno.test({
         scenario: {
           ...minerNoDecisionForClearTaskTest.scenario,
           input: minerNoDecisionForClearTaskTest.scenario.input.replace(
-            "$PAYDIRT_CLAIM",
+            "$STARTUP_BD",
             workIssueId,
           ),
         },

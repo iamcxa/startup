@@ -6,7 +6,7 @@
 import { assertStringIncludes } from '@std/assert';
 
 Deno.test({
-  name: 'prospect --dry-run shows PAYDIRT environment variables',
+  name: 'prospect --dry-run shows STARTUP environment variables',
   async fn() {
     const cmd = new Deno.Command('deno', {
       args: [
@@ -29,10 +29,10 @@ Deno.test({
     const { stdout } = await cmd.output();
     const output = new TextDecoder().decode(stdout);
 
-    assertStringIncludes(output, 'PAYDIRT_CLAIM=');
+    assertStringIncludes(output, 'STARTUP_BD=');
     assertStringIncludes(output, 'pd-envtest');
-    assertStringIncludes(output, 'PAYDIRT_PROSPECT=');
+    assertStringIncludes(output, 'STARTUP_ROLE=');
     assertStringIncludes(output, 'surveyor');
-    assertStringIncludes(output, 'PAYDIRT_BIN=');
+    assertStringIncludes(output, 'STARTUP_BIN=');
   },
 });

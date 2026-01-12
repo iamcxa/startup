@@ -6,5 +6,5 @@ input: |
   User: I need to add user authentication to the application.
 context:
   environment:
-    PAYDIRT_CLAIM: "pd-test123"
-    PAYDIRT_BIN: "./paydirt"
+    STARTUP_BD: "pd-test123"
+    STARTUP_BIN: "./paydirt"
