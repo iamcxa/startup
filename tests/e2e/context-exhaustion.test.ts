@@ -10,7 +10,7 @@
 // WARNING: This test spawns real Claude agents and consumes API credits!
 
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { initLangfuseForTest, getLangfuseEnv, withTestSpan, traceEvent, type LangfuseTestContext } from "../utils/langfuse.ts";
+import { initLangfuseForTest, getLangfuseEnv, withTestSpan, withAgentSpan, traceEvent, type LangfuseTestContext } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
 const PAYDIRT_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
@@ -114,6 +114,7 @@ async function killTmuxSession(sessionName: string): Promise<void> {
 
 /**
  * Spawn Miner directly (simulating respawn) - with detailed tracing
+ * Uses withAgentSpan to capture input (task) for Langfuse gen_ai visualization
  */
 async function spawnMiner(
   issueId: string,
@@ -144,33 +145,58 @@ async function spawnMiner(
     return execute();
   }
 
-  return withTestSpan(
+  // Use withAgentSpan to capture input/output with gen_ai attributes
+  return withAgentSpan(
     langfuse,
-    "agent:spawn:miner",
+    "agent:miner",
     {
-      "agent.role": "miner",
-      "agent.model": model,
-      "agent.claim_id": issueId,
-      "agent.task": task.substring(0, 200), // Truncate long tasks
-      "agent.background": true,
+      model,
+      prompt: task,
+      task: `Miner claim: ${issueId}`,
     },
     async () => {
       const startTime = Date.now();
-      const result = await execute();
+      const execResult = await execute();
       const duration = Date.now() - startTime;
 
-      // Log spawn result
+      // Log spawn metadata as event
       traceEvent(langfuse, "agent:spawn:result", {
         "agent.role": "miner",
         "agent.claim_id": issueId,
-        "agent.exit_code": result.code,
+        "agent.exit_code": execResult.code,
         "agent.spawn_duration_ms": duration,
-        "agent.success": result.code === 0,
+        "agent.success": execResult.code === 0,
       });
 
-      return result;
+      // Return result with spawn output as the agent output
+      return {
+        result: execResult,
+        output: execResult.stdout + (execResult.stderr ? `\n[stderr]: ${execResult.stderr}` : ""),
+      };
     },
   );
+}
+
+/**
+ * Capture agent output from bd comments for tracing
+ */
+async function captureAgentOutput(
+  issueId: string,
+  agentRole: string,
+  langfuse?: LangfuseTestContext,
+): Promise<string> {
+  const comments = await getIssueComments(issueId, langfuse);
+
+  if (langfuse?.enabled) {
+    traceEvent(langfuse, `agent:${agentRole}:output`, {
+      "agent.role": agentRole,
+      "agent.claim_id": issueId,
+      "agent.output_length": comments.length,
+      "agent.output_preview": comments.substring(0, 500),
+    });
+  }
+
+  return comments;
 }
 
 /**
@@ -390,6 +416,9 @@ Deno.test({
         console.log(`  Phase 1 comments:\n${phase1Comments.split("\n").map(l => "    " + l).join("\n")}`);
         console.log("  ✓ Task 1 completed");
 
+        // Capture agent output for Langfuse gen_ai visualization
+        await captureAgentOutput(ctx.workIssueId, "miner:phase1", langfuse);
+
         traceEvent(langfuse, "phase:1:complete", {
           "phase.number": 1,
           "phase.success": true,
@@ -497,6 +526,9 @@ Deno.test({
 
         assertEquals(task2Complete, true, "Task 2 should complete");
         console.log("  ✓ Task 2 completed");
+
+        // Capture agent output for Langfuse gen_ai visualization
+        await captureAgentOutput(ctx.workIssueId, "miner:phase4", langfuse);
 
         traceEvent(langfuse, "phase:4:complete", {
           "phase.number": 4,

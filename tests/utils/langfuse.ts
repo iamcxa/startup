@@ -107,6 +107,13 @@ export function getLangfuseEnv(context?: LangfuseTestContext): Record<string, st
 /**
  * Create a traced span for a test operation.
  * This is required to actually send traces to Langfuse.
+ *
+ * Uses Langfuse-specific attributes:
+ * - langfuse.session.id: Groups all spans into a Langfuse Session
+ * - langfuse.trace.name: Sets the trace name in Langfuse UI
+ * - langfuse.tags: Tags for filtering in Langfuse UI
+ *
+ * See: https://langfuse.com/integrations/native/opentelemetry
  */
 export async function withTestSpan<T>(
   context: LangfuseTestContext,
@@ -122,14 +129,19 @@ export async function withTestSpan<T>(
 
   return await tracer.startActiveSpan(spanName, async (span) => {
     try {
-      // Set span attributes
+      // Set Langfuse-specific attributes for session grouping
       span.setAttributes({
-        "langfuse.session_id": context.sessionId,
-        "langfuse.trace_name": context.traceName,
+        // Langfuse session - groups all spans in this test run
+        "langfuse.session.id": context.sessionId,
+        // Langfuse trace name
+        "langfuse.trace.name": context.traceName,
+        // Tags for filtering
+        "langfuse.tags": JSON.stringify(["e2e-test", "paydirt"]),
+        // Custom attributes
         ...attributes,
       });
 
-      debugLog(`Span started: ${spanName}`, attributes);
+      debugLog(`Span started: ${spanName}`, { session: context.sessionId, ...attributes });
 
       const result = await fn();
 
@@ -152,6 +164,96 @@ export async function withTestSpan<T>(
 }
 
 /**
+ * Create a traced span for an agent/LLM operation with gen_ai semantic conventions.
+ * This captures input/output for Langfuse visualization.
+ *
+ * Uses gen_ai semantic conventions:
+ * - gen_ai.system: The AI system (e.g., "claude")
+ * - gen_ai.request.model: The model used
+ * - gen_ai.prompt.0.role: Input role (usually "user")
+ * - gen_ai.prompt.0.content: The input/prompt sent to the agent
+ * - gen_ai.completion.0.role: Output role (usually "assistant")
+ * - gen_ai.completion.0.content: The agent's response/output
+ *
+ * See: https://langfuse.com/docs/integrations/opentelemetry
+ */
+export async function withAgentSpan<T>(
+  context: LangfuseTestContext,
+  spanName: string,
+  input: {
+    model?: string;
+    prompt: string;
+    role?: string;
+    task?: string;
+  },
+  fn: () => Promise<{ result: T; output?: string }>,
+): Promise<T> {
+  if (!context.enabled) {
+    const { result } = await fn();
+    return result;
+  }
+
+  const tracer = trace.getTracer("paydirt-e2e-test");
+
+  return await tracer.startActiveSpan(spanName, async (span) => {
+    try {
+      // Set Langfuse-specific attributes
+      span.setAttributes({
+        "langfuse.session.id": context.sessionId,
+        "langfuse.trace.name": context.traceName,
+        "langfuse.tags": JSON.stringify(["e2e-test", "agent", "paydirt"]),
+      });
+
+      // Set gen_ai semantic convention attributes for input
+      span.setAttributes({
+        "gen_ai.system": "claude",
+        "gen_ai.request.model": input.model || "sonnet",
+        "gen_ai.prompt.0.role": input.role || "user",
+        "gen_ai.prompt.0.content": input.prompt,
+      });
+
+      // Add custom attributes
+      if (input.task) {
+        span.setAttribute("agent.task", input.task);
+      }
+
+      debugLog(`Agent span started: ${spanName}`, {
+        session: context.sessionId,
+        model: input.model,
+        promptLength: input.prompt.length,
+      });
+
+      const { result, output } = await fn();
+
+      // Set gen_ai completion attributes if output is provided
+      if (output) {
+        span.setAttributes({
+          "gen_ai.completion.0.role": "assistant",
+          "gen_ai.completion.0.content": output.length > 10000
+            ? output.substring(0, 10000) + "...[truncated]"
+            : output,
+        });
+      }
+
+      span.setStatus({ code: SpanStatusCode.OK });
+      debugLog(`Agent span completed: ${spanName}`, { outputLength: output?.length });
+
+      return result;
+    } catch (error) {
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      span.recordException(error instanceof Error ? error : new Error(String(error)));
+      debugLog(`Agent span error: ${spanName}`, { error: String(error) });
+      throw error;
+    } finally {
+      span.end();
+    }
+  });
+}
+
+/**
  * Create a simple trace event (for logging key milestones).
  */
 export function traceEvent(
@@ -165,8 +267,13 @@ export function traceEvent(
   const span = tracer.startSpan(eventName);
 
   span.setAttributes({
-    "langfuse.session_id": context.sessionId,
-    "langfuse.trace_name": context.traceName,
+    // Langfuse session - groups all spans in this test run
+    "langfuse.session.id": context.sessionId,
+    // Langfuse trace name
+    "langfuse.trace.name": context.traceName,
+    // Tags
+    "langfuse.tags": JSON.stringify(["e2e-test", "event"]),
+    // Event type
     "event.type": "milestone",
     ...attributes,
   });
