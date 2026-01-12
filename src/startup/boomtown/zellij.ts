@@ -378,6 +378,72 @@ export async function addTeamTab(
   }
 }
 
+/**
+ * Add a new role pane to an existing team tab.
+ * Splits the current pane vertically (stacked layout).
+ *
+ * @param teamId - Team ID
+ * @param role - Role name (e.g., "engineer", "product")
+ * @returns true if pane was added successfully
+ */
+export async function addRolePaneToTeam(
+  teamId: string,
+  role: string,
+): Promise<boolean> {
+  try {
+    const tmuxSession = `startup-${teamId}`;
+    const tabName = `team-${teamId.slice(0, 8)}`;
+
+    // First, switch to the team tab
+    const gotoCmd = new Deno.Command('zellij', {
+      args: ['action', 'go-to-tab-name', tabName],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+
+    const gotoResult = await gotoCmd.output();
+    if (!gotoResult.success) {
+      // Tab doesn't exist, try creating it first
+      return false;
+    }
+
+    // Create new pane (splits down by default - vertical stack)
+    const newPaneCmd = new Deno.Command('zellij', {
+      args: ['action', 'new-pane', '--direction', 'down'],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+
+    const paneResult = await newPaneCmd.output();
+    if (!paneResult.success) {
+      return false;
+    }
+
+    // Write attach command for the new role
+    const attachScript =
+      `while true; do tmux attach-session -t ${tmuxSession}:${role} 2>/dev/null || (echo "Waiting for ${role}..." && sleep 2); done`;
+
+    const writeCmd = new Deno.Command('zellij', {
+      args: ['action', 'write-chars', attachScript],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+    await writeCmd.output();
+
+    // Press Enter
+    const enterCmd = new Deno.Command('zellij', {
+      args: ['action', 'write', '13'],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+    await enterCmd.output();
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ============================================================================
 // Utility Functions
 // ============================================================================
