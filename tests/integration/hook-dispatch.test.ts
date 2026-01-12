@@ -180,9 +180,9 @@ Deno.test({
     const { stdout } = await process.output();
     const output = new TextDecoder().decode(stdout);
 
-    // Verify it would spawn PM with correct arguments
+    // Verify it would spawn Product agent with correct arguments
     assertEquals(output.includes('call'), true, 'Should call call command');
-    assertEquals(output.includes('pm'), true, 'Should spawn PM agent');
+    assertEquals(output.includes('product'), true, 'Should spawn Product agent');
     assertEquals(output.includes('st-dec456'), true, 'Should use decision issue ID');
   },
 });

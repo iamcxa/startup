@@ -15,10 +15,9 @@ Deno.test({
         'startup.ts',
         'call',
         'designer',
-        '--claim',
-        'pd-envtest',
-        '--task',
         'Test task',
+        '--claim',
+        'st-envtest',
         '--dry-run',
       ],
       stdout: 'piped',
@@ -30,9 +29,9 @@ Deno.test({
     const output = new TextDecoder().decode(stdout);
 
     assertStringIncludes(output, 'STARTUP_BD=');
-    assertStringIncludes(output, 'pd-envtest');
+    assertStringIncludes(output, 'st-envtest');
     assertStringIncludes(output, 'STARTUP_ROLE=');
-    assertStringIncludes(output, 'designer');
+    assertStringIncludes(output, 'surveyor'); // designer maps to internal surveyor role
     assertStringIncludes(output, 'STARTUP_BIN=');
   },
 });

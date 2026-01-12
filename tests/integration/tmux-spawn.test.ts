@@ -104,9 +104,8 @@ Deno.test({
       const cmd = new Deno.Command('deno', {
         args: [
           'run', '--allow-all', 'startup.ts',
-          'call', 'designer',
+          'call', 'designer', 'Test task',
           '--claim', TEST_CLAIM_ID,
-          '--task', 'Test task',
           '--dry-run',
         ],
         stdout: 'piped',
@@ -142,9 +141,8 @@ Deno.test({
       const cmd = new Deno.Command('deno', {
         args: [
           'run', '--allow-all', 'startup.ts',
-          'call', 'designer',
+          'call', 'designer', 'Test task',
           '--claim', TEST_CLAIM_ID,
-          '--task', 'Test task',
           '--background',
         ],
         stdout: 'piped',
@@ -162,11 +160,11 @@ Deno.test({
       const info = await getSessionInfo(TEST_SESSION);
       assertEquals(info.exists, true, 'Session should exist');
 
-      // Should have the designer window
+      // Should have the surveyor window (designer maps to internal surveyor role)
       assertEquals(
-        info.windows.some((w) => w.includes('designer')),
+        info.windows.some((w) => w.includes('surveyor')),
         true,
-        `Should have designer window. Windows: ${info.windows.join(', ')}`,
+        `Should have surveyor window. Windows: ${info.windows.join(', ')}`,
       );
     } finally {
       await cleanupTestSession();
@@ -193,9 +191,8 @@ Deno.test({
       const cmd = new Deno.Command('deno', {
         args: [
           'run', '--allow-all', 'startup.ts',
-          'call', 'engineer',
+          'call', 'engineer', 'Second task',
           '--claim', TEST_CLAIM_ID,
-          '--task', 'Second task',
           '--background',
         ],
         stdout: 'piped',
@@ -216,9 +213,9 @@ Deno.test({
         'Should still have initial window',
       );
       assertEquals(
-        finalInfo.windows.some((w) => w.includes('engineer')),
+        finalInfo.windows.some((w) => w.includes('miner')),
         true,
-        'Should have engineer window',
+        'Should have miner window (engineer maps to internal miner role)',
       );
     } finally {
       await cleanupTestSession();

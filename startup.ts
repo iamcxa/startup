@@ -9,9 +9,9 @@
  * Roles:
  *   cto        - Technical decisions, architecture (was: camp-boss)
  *   engineer   - Implementation via TDD (was: miner)
- *   designer   - Design planning (was: planner)
- *   lead       - Task breakdown (was: foreman)
- *   qa         - E2E verification (was: witness)
+ *   designer   - Design planning (maps to: surveyor)
+ *   lead       - Task breakdown (maps to: shift-boss)
+ *   qa         - E2E verification (maps to: canary)
  *   reviewer   - Code review (was: assayer)
  *   product    - Product Q&A (was: pm)
  */
@@ -27,9 +27,9 @@ const VERSION = '0.1.0';
 const ROLE_MAP: Record<string, string> = {
   'cto': 'camp-boss',
   'engineer': 'miner',
-  'designer': 'planner',
-  'lead': 'foreman',
-  'qa': 'witness',
+  'designer': 'surveyor',
+  'lead': 'shift-boss',
+  'qa': 'canary',
   'reviewer': 'assayer',
   'product': 'pm',
 };

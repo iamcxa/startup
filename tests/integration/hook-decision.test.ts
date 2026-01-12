@@ -1,9 +1,9 @@
 // tests/integration/hook-decision.test.ts
-// Integration test for PostToolUse hook pd:decision handling
+// Integration test for PostToolUse hook st:decision handling
 //
 // Tests the shell script hooks/post-tool-use.sh correctly:
-// 1. Spawns PM Agent when bd create --label pd:decision is detected
-// 2. Respawns Miner when bd close is detected on a pd:decision issue
+// 1. Spawns PM Agent when bd create --label st:decision is detected
+// 2. Respawns Miner when bd close is detected on a st:decision issue
 //
 // Run with: deno test tests/integration/hook-decision.test.ts --allow-all
 
@@ -98,9 +98,9 @@ async function runHook(
 // Decision Issue Creation Detection Tests
 // ============================================================================
 
-Deno.test("Hook spawns PM when bd create pd:decision detected", async () => {
+Deno.test("Hook spawns PM when bd create st:decision detected", async () => {
   const result = await runHook({
-    CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: OAuth vs JWT" --type task --label pd:decision --priority 1',
+    CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: OAuth vs JWT" --type task --label st:decision --priority 1',
     CLAUDE_TOOL_OUTPUT: "Created issue: beads-dec123",
     STARTUP_BD: "beads-work456",
     STARTUP_ROLE: "miner",
@@ -110,7 +110,7 @@ Deno.test("Hook spawns PM when bd create pd:decision detected", async () => {
   assertEquals(result.capturedCommands.length, 1, "Should capture one command");
   assertStringIncludes(
     result.capturedCommands[0],
-    "call pm",
+    "call product",
     "Should spawn PM agent",
   );
   assertStringIncludes(
@@ -120,16 +120,16 @@ Deno.test("Hook spawns PM when bd create pd:decision detected", async () => {
   );
 });
 
-Deno.test("Hook spawns PM with --label=pd:decision syntax", async () => {
+Deno.test("Hook spawns PM with --label=st:decision syntax", async () => {
   const result = await runHook({
-    CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: X" --label=pd:decision',
+    CLAUDE_TOOL_INPUT: 'bd create --title "DECISION: X" --label=st:decision',
     CLAUDE_TOOL_OUTPUT: "Created issue: beads-xyz789",
     STARTUP_BD: "beads-work123",
   });
 
   assertEquals(result.code, 0);
   assertEquals(result.capturedCommands.length, 1);
-  assertStringIncludes(result.capturedCommands[0], "call pm");
+  assertStringIncludes(result.capturedCommands[0], "call product");
   assertStringIncludes(result.capturedCommands[0], "--claim beads-xyz789");
 });
 
@@ -156,7 +156,7 @@ Deno.test("Hook does NOT spawn PM without STARTUP_BIN", async () => {
       args: [HOOK_SCRIPT],
       cwd: WORK_DIR,
       env: {
-        CLAUDE_TOOL_INPUT: 'bd create --label pd:decision --title "X"',
+        CLAUDE_TOOL_INPUT: 'bd create --label st:decision --title "X"',
         CLAUDE_TOOL_OUTPUT: "Created issue: beads-dec123",
         // No STARTUP_BIN set
       },
@@ -180,7 +180,7 @@ Deno.test("Hook does NOT spawn PM without STARTUP_BIN", async () => {
 // Decision Close Detection Tests
 // ============================================================================
 
-Deno.test("Hook respawns Miner when pd:decision closed (with real bd)", async () => {
+Deno.test("Hook respawns Miner when st:decision closed (with real bd)", async () => {
   // This test requires a real bd issue to exist
   // Create test issues, then test the hook
 
@@ -206,7 +206,7 @@ Deno.test("Hook respawns Miner when pd:decision closed (with real bd)", async ()
         "create",
         "--title", "DECISION: Hook test decision",
         "--type", "task",
-        "--label", "pd:decision",
+        "--label", "st:decision",
         "--label", "hook-test",
       ],
       cwd: WORK_DIR,
@@ -253,7 +253,7 @@ Deno.test("Hook respawns Miner when pd:decision closed (with real bd)", async ()
       assertEquals(result.capturedCommands.length, 1, "Should capture miner respawn command");
       assertStringIncludes(
         result.capturedCommands[0],
-        "call miner",
+        "call engineer",
         "Should respawn miner",
       );
       assertStringIncludes(
@@ -351,7 +351,7 @@ Deno.test("Hook spawns agent from SPAWN: comment", async () => {
 
 Deno.test("Hook handles missing CLAUDE_TOOL_OUTPUT gracefully", async () => {
   const result = await runHook({
-    CLAUDE_TOOL_INPUT: 'bd create --label pd:decision --title "X"',
+    CLAUDE_TOOL_INPUT: 'bd create --label st:decision --title "X"',
     // No CLAUDE_TOOL_OUTPUT
     STARTUP_BD: "beads-work123",
   });
@@ -367,7 +367,7 @@ Deno.test("Hook handles missing CLAUDE_TOOL_OUTPUT gracefully", async () => {
 
 Deno.test("Hook handles empty stdin", async () => {
   const result = await runHook({
-    CLAUDE_TOOL_INPUT: 'bd create --label pd:decision --title "X"',
+    CLAUDE_TOOL_INPUT: 'bd create --label st:decision --title "X"',
     CLAUDE_TOOL_OUTPUT: "Created issue: beads-dec123",
     STARTUP_BD: "beads-work123",
   }, ""); // Empty stdin

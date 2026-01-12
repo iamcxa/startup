@@ -31,10 +31,10 @@ run_cmd() {
 }
 
 # --- Decision Issue Detection ---
-# Detect bd create with pd:decision label -> spawn PM
-# Note: This matches any label starting with 'pd:decision' (e.g., pd:decision-archive)
+# Detect bd create with st:decision label -> spawn Product agent
+# Note: This matches any label starting with 'st:decision' (e.g., st:decision-archive)
 # This is acceptable for POC as label naming is controlled
-if echo "$TOOL_INPUT" | grep -qE "bd create.*--label[= ].*pd:decision"; then
+if echo "$TOOL_INPUT" | grep -qE "bd create.*--label[= ].*st:decision"; then
   # Extract issue ID from tool output (CLAUDE_TOOL_OUTPUT)
   TOOL_OUTPUT="${CLAUDE_TOOL_OUTPUT:-}"
   DECISION_ID=$(echo "$TOOL_OUTPUT" | sed -n 's/.*Created issue:[[:space:]]*\([^[:space:]]*\).*/\1/p' | head -1)
@@ -42,12 +42,12 @@ if echo "$TOOL_INPUT" | grep -qE "bd create.*--label[= ].*pd:decision"; then
   if [ -n "$DECISION_ID" ] && [ -n "$STARTUP_BIN" ]; then
     # Use STARTUP_MODEL env var if set, otherwise default to sonnet
     STARTUP_MODEL="${STARTUP_MODEL:-sonnet}"
-    run_cmd "$STARTUP_BIN" prospect pm --claim "$DECISION_ID" --background --task "Answer decision issue $DECISION_ID" --model "$STARTUP_MODEL"
+    run_cmd "$STARTUP_BIN" call product --claim "$DECISION_ID" --background --task "Answer decision issue $DECISION_ID" --model "$STARTUP_MODEL"
   fi
 fi
 
 # --- Decision Close Detection ---
-# Detect bd close -> check if pd:decision -> respawn blocked miner
+# Detect bd close -> check if st:decision -> respawn blocked engineer
 # Note: This queries bd show to check labels and dependents
 if echo "$TOOL_INPUT" | grep -q "bd close"; then
   # POSIX-compatible: use [[:space:]][[:space:]]* instead of GNU's [[:space:]]\+
@@ -58,8 +58,8 @@ if echo "$TOOL_INPUT" | grep -q "bd close"; then
     # Note: bd show --json returns an array: [{...}]
     ISSUE_JSON=$(bd show "$CLOSED_ID" --json 2>/dev/null || echo "[]")
 
-    # Check if it's a pd:decision issue (properly parse JSON array)
-    HAS_DECISION_LABEL=$(echo "$ISSUE_JSON" | jq -r '.[0].labels // [] | any(. == "pd:decision")' 2>/dev/null)
+    # Check if it's a st:decision issue (properly parse JSON array)
+    HAS_DECISION_LABEL=$(echo "$ISSUE_JSON" | jq -r '.[0].labels // [] | any(. == "st:decision")' 2>/dev/null)
     if [ "$HAS_DECISION_LABEL" = "true" ]; then
       # Get the first dependent (the blocked work issue)
       # Note: bd show --json returns array format with dependents as objects, so extract .id
@@ -75,7 +75,7 @@ if echo "$TOOL_INPUT" | grep -q "bd close"; then
 
         # Use STARTUP_MODEL env var if set, otherwise default to sonnet
         STARTUP_MODEL="${STARTUP_MODEL:-sonnet}"
-        run_cmd "$STARTUP_BIN" prospect miner --claim "$BLOCKED_ISSUE" --task "${RESUME_TASK:-Resume work}" --background --model "$STARTUP_MODEL"
+        run_cmd "$STARTUP_BIN" call engineer --claim "$BLOCKED_ISSUE" --task "${RESUME_TASK:-Resume work}" --background --model "$STARTUP_MODEL"
       fi
     fi
   fi
@@ -106,23 +106,23 @@ case "$PREFIX" in
     [ -z "$ROLE" ] && exit 0
 
     if [ "$ROLE" = "trail-boss" ]; then
-      # Camp Boss creates new caravan
+      # Company creates new team
       if [ -n "$TASK" ]; then
-        run_cmd "$STARTUP_BIN" stake "$TASK"
+        run_cmd "$STARTUP_BIN" kickoff "$TASK"
       fi
     elif [ -n "$TARGET_CLAIM" ]; then
-      # Add agent to specified caravan
-      run_cmd "$STARTUP_BIN" prospect "$ROLE" --claim "$TARGET_CLAIM" --task "$TASK" --background
+      # Add agent to specified team
+      run_cmd "$STARTUP_BIN" call "$ROLE" --claim "$TARGET_CLAIM" --task "$TASK" --background
     elif [ -n "$STARTUP_BD" ]; then
-      # Add agent to same caravan
-      run_cmd "$STARTUP_BIN" prospect "$ROLE" --claim "$STARTUP_BD" --task "$TASK" --background
+      # Add agent to same team
+      run_cmd "$STARTUP_BIN" call "$ROLE" --claim "$STARTUP_BD" --task "$TASK" --background
     fi
     ;;
 
   QUESTION)
     # Spawn claim-agent to answer question
     if [ -n "$STARTUP_BD" ]; then
-      run_cmd "$STARTUP_BIN" prospect claim-agent --claim "$STARTUP_BD" --background
+      run_cmd "$STARTUP_BIN" call claim-agent --claim "$STARTUP_BD" --background
     fi
     ;;
 

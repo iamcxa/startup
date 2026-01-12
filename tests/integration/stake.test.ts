@@ -4,7 +4,7 @@ import { assertStringIncludes } from '@std/assert';
 Deno.test('startup call --dry-run generates correct command', async () => {
   const cmd = new Deno.Command('deno', {
     args: ['run', '--allow-all', 'startup.ts', 'kickoff', 'Test task', '--dry-run'],
-    cwd: 'Deno.cwd()',
+    cwd: Deno.cwd(),
     stdout: 'piped',
     stderr: 'piped',
   });
