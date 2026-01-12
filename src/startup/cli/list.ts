@@ -33,7 +33,7 @@ async function getSessionInfo(): Promise<SessionInfo[]> {
     const [name, windows, created, attached] = line.split('|');
 
     // Filter to startup sessions only
-    if (!name.startsWith('startup-') && name !== 'pd-boss') continue;
+    if (!name.startsWith('startup-') && name !== 'startup-company') continue;
 
     sessions.push({
       name,
@@ -52,8 +52,8 @@ export async function listCommand(): Promise<void> {
   if (sessions.length === 0) {
     console.log('No Startup sessions found');
     console.log('');
-    console.log('Start a Caravan with: pd stake "task"');
-    console.log('Or start Camp Boss with: pd boss start');
+    console.log('Start a Team with: startup kickoff "task"');
+    console.log('Or start Company HQ with: startup company start');
     return;
   }
 
@@ -62,7 +62,7 @@ export async function listCommand(): Promise<void> {
   console.log('');
 
   for (const session of sessions) {
-    const type = session.name === 'pd-boss' ? 'daemon' : 'caravan';
+    const type = session.name === 'startup-company' ? 'company' : 'team';
     const status = session.attached ? '(attached)' : '';
     console.log(`${session.name} [${type}] ${status}`);
     console.log(`  Windows: ${session.windows}`);
@@ -71,7 +71,7 @@ export async function listCommand(): Promise<void> {
   }
 
   console.log('Commands:');
-  console.log('  pd attach <name>  Attach to session');
-  console.log('  pd abandon <id>   Stop a Caravan');
-  console.log('  pd boss stop      Stop Camp Boss daemon');
+  console.log('  startup attach <name>  Attach to session');
+  console.log('  startup abandon <id>   Stop a Team');
+  console.log('  startup company stop   Stop Company HQ');
 }

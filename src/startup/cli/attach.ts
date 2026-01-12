@@ -25,7 +25,7 @@ async function listStartupSessions(): Promise<string[]> {
   return output
     .trim()
     .split('\n')
-    .filter((s) => s.startsWith('startup-') || s === 'pd-boss');
+    .filter((s) => s.startsWith('startup-') || s === 'startup-company');
 }
 
 export async function attachCommand(options: AttachOptions): Promise<void> {
@@ -36,25 +36,25 @@ export async function attachCommand(options: AttachOptions): Promise<void> {
     const sessions = await listStartupSessions();
     if (sessions.length === 0) {
       console.log('No Startup sessions found');
-      console.log('Start a Caravan with: pd stake "task"');
-      console.log('Or start Camp Boss with: pd boss start');
+      console.log('Start a Team with: startup kickoff "task"');
+      console.log('Or start Company HQ with: startup company start');
       return;
     }
 
     console.log('Available Startup sessions:');
     for (const session of sessions) {
-      const label = session === 'pd-boss' ? '(Camp Boss daemon)' : '(Caravan)';
+      const label = session === 'startup-company' ? '(Company HQ)' : '(Team)';
       console.log(`  ${session} ${label}`);
     }
     console.log('');
-    console.log('Attach with: pd attach <session-name>');
+    console.log('Attach with: startup attach <session-name>');
     return;
   }
 
   // Resolve target to session name
   let sessionName: string;
-  if (target === 'boss') {
-    sessionName = 'pd-boss';
+  if (target === 'company') {
+    sessionName = 'startup-company';
   } else if (target.startsWith('startup-')) {
     sessionName = target;
   } else {
