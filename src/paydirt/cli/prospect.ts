@@ -2,6 +2,7 @@
 import type { ProspectRole } from '../../types.ts';
 import { getPaydirtBinPath, getPaydirtInstallDir, getUserProjectDir } from '../paths.ts';
 import { buildClaudeCommand } from '../claude/command.ts';
+import { startActiveObservation } from 'npm:@langfuse/tracing@^4.5.1';
 
 export interface ProspectOptions {
   role: string;
@@ -90,14 +91,18 @@ async function createTmuxSession(
   return result.success;
 }
 
-export async function prospectCommand(options: ProspectOptions): Promise<void> {
+/**
+ * Execute the prospect spawning logic.
+ * Returns exit code: 0 for success, 1 for failure.
+ */
+async function executeProspect(options: ProspectOptions): Promise<number> {
   const { role, task, claimId, dryRun, background, model } = options;
 
   // Validate role
   if (!VALID_ROLES.includes(role as ProspectRole)) {
     console.error(`Error: Invalid prospect role: ${role}`);
     console.error(`Valid roles: ${VALID_ROLES.join(', ')}`);
-    Deno.exit(1);
+    return 1;
   }
 
   const prospectRole = role as ProspectRole;
@@ -141,7 +146,7 @@ export async function prospectCommand(options: ProspectOptions): Promise<void> {
   if (dryRun) {
     console.log('\n[DRY RUN] Would execute:');
     console.log(claudeCommand);
-    return;
+    return 0;
   }
 
   // Determine session name - use existing Caravan session if claimId provided
@@ -164,7 +169,7 @@ export async function prospectCommand(options: ProspectOptions): Promise<void> {
 
   if (!success) {
     console.error(`Failed to spawn ${prospectRole}`);
-    Deno.exit(1);
+    return 1;
   }
 
   console.log(`Prospect ${prospectRole} spawned in ${sessionName}`);
@@ -180,4 +185,44 @@ export async function prospectCommand(options: ProspectOptions): Promise<void> {
     });
     await attachCmd.output();
   }
+
+  return 0;
+}
+
+export async function prospectCommand(options: ProspectOptions): Promise<void> {
+  const { role, task, claimId } = options;
+
+  // If Langfuse is not enabled, execute directly
+  if (Deno.env.get('LANGFUSE_ENABLED') !== 'true') {
+    const exitCode = await executeProspect(options);
+    if (exitCode !== 0) {
+      Deno.exit(exitCode);
+    }
+    return;
+  }
+
+  // Wrap execution with Langfuse observation
+  await startActiveObservation(
+    `prospect-${role}`,
+    async (span) => {
+      // Set span attributes (TypeScript definitions may be incomplete, but runtime supports these)
+      span.update({
+        input: { role, claim: claimId, task },
+        sessionId: Deno.env.get('LANGFUSE_SESSION_ID'),
+        metadata: { claimId },
+        tags: ['prospect', role],
+      } as any);
+
+      const exitCode = await executeProspect(options);
+
+      span.update({
+        output: { exitCode },
+        level: exitCode === 0 ? 'DEFAULT' : 'ERROR',
+      });
+
+      if (exitCode !== 0) {
+        Deno.exit(exitCode);
+      }
+    }
+  );
 }
