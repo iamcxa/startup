@@ -149,6 +149,18 @@ if echo "$TOOL_INPUT" | grep -q "bd close"; then
   fi
 fi
 
+# --- Kickoff Detection ---
+# Detect startup kickoff -> add team tab to zellij
+if echo "$TOOL_INPUT" | grep -qE "startup kickoff"; then
+  # Extract team ID from output
+  TOOL_OUTPUT="${CLAUDE_TOOL_OUTPUT:-}"
+  TEAM_ID=$(echo "$TOOL_OUTPUT" | sed -n 's/.*Created team:[[:space:]]*\([^[:space:]]*\).*/\1/p' | head -1)
+
+  if [ -n "$TEAM_ID" ]; then
+    add_team_tab "$TEAM_ID"
+  fi
+fi
+
 # Check if this is a bd comments add command
 echo "$TOOL_INPUT" | grep -q "bd comments add" || exit 0
 
