@@ -17,6 +17,9 @@
  */
 
 import { parseArgs } from '@std/cli/parse-args';
+import { load } from '@std/dotenv';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { LangfuseSpanProcessor } from '@langfuse/otel';
 import {
   abandonCommand,
   attachCommand,
@@ -30,6 +33,29 @@ import {
 import { launchZellijBoomtown } from './src/paydirt/boomtown/zellij-dashboard.ts';
 
 const VERSION = '0.1.0';
+
+let sdk: NodeSDK | null = null;
+
+async function initLangfuse() {
+  await load({ export: true });
+
+  if (Deno.env.get("LANGFUSE_ENABLED") !== "true") return;
+
+  const spanProcessor = new LangfuseSpanProcessor();
+  sdk = new NodeSDK({ spanProcessors: [spanProcessor] });
+  sdk.start();
+
+  const cleanup = async () => {
+    if (sdk) {
+      await spanProcessor.forceFlush();
+      await sdk.shutdown();
+    }
+  };
+
+  Deno.addSignalListener("SIGINT", cleanup);
+  Deno.addSignalListener("SIGTERM", cleanup);
+  globalThis.addEventListener("unload", cleanup);
+}
 
 function printHelp(): void {
   console.log(`
@@ -164,5 +190,6 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.main) {
+  await initLangfuse();
   main();
 }
