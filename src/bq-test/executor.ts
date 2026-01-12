@@ -1,6 +1,7 @@
 // src/bq-test/executor.ts
 // Real agent executor for BQ testing
 
+import { startActiveObservation } from "npm:@langfuse/tracing@^4.5.1";
 import type { BehaviorTest } from "./types.ts";
 import type { ActualBehavior } from "./runner.ts";
 
@@ -13,6 +14,10 @@ export interface ExecutorConfig {
   timeout?: number;
   /** Whether to print agent output */
   verbose?: boolean;
+  /** Langfuse session ID for tracing */
+  langfuseSessionId?: string;
+  /** Whether to enable Langfuse tracing */
+  langfuseEnabled?: boolean;
 }
 
 export interface ExecutionResult {
@@ -29,6 +34,49 @@ export async function executeRealAgent(
   test: BehaviorTest,
   config: ExecutorConfig,
 ): Promise<ExecutionResult> {
+  if (config.langfuseEnabled) {
+    return await startActiveObservation(
+      `bq-test-${test.scenario.name}`,
+      async (span) => {
+        span.update({
+          input: {
+            scenario: test.scenario.name,
+            agent: test.scenario.agent,
+            prompt: test.scenario.input,
+          },
+          sessionId: config.langfuseSessionId,
+          metadata: {
+            testId: test.id,
+            agent: test.scenario.agent,
+          },
+          tags: ["bq-test", test.scenario.agent],
+        });
+
+        const result = await executeAgentProcess(test, config);
+
+        span.update({
+          output: {
+            behavior: result.behavior,
+            exitCode: result.exitCode,
+          },
+          level: result.exitCode === 0 ? "DEFAULT" : "ERROR",
+        });
+
+        return result;
+      }
+    );
+  }
+
+  return await executeAgentProcess(test, config);
+}
+
+/**
+ * Execute the agent process (internal implementation)
+ */
+async function executeAgentProcess(
+  test: BehaviorTest,
+  config: ExecutorConfig,
+): Promise<ExecutionResult> {
   const startTime = Date.now();
   const timeout = config.timeout ?? 60000;
 
@@ -38,6 +86,25 @@ export async function executeRealAgent(
   // Build the claude command with the test prompt
   const prompt = buildTestPrompt(test);
 
+  // Build environment variables
+  const env: Record<string, string> = {
+    ...Deno.env.toObject(),
+    PAYDIRT_CLAIM: testClaimId,
+    PAYDIRT_BIN: config.paydirtBin,
+    PAYDIRT_PROSPECT: test.scenario.agent,
+    // Disable hooks during testing to avoid side effects
+    PAYDIRT_HOOK_SYNC: "1",
+  };
+
+  if (config.langfuseEnabled) {
+    env.LANGFUSE_ENABLED = "true";
+    env.LANGFUSE_SESSION_ID = config.langfuseSessionId || "";
+    env.LANGFUSE_TRACE_NAME = `bq-${test.scenario.name}`;
+    env.LANGFUSE_SECRET_KEY = Deno.env.get("LANGFUSE_SECRET_KEY") || "";
+    env.LANGFUSE_PUBLIC_KEY = Deno.env.get("LANGFUSE_PUBLIC_KEY") || "";
+    env.LANGFUSE_BASE_URL = Deno.env.get("LANGFUSE_BASE_URL") || "";
+  }
+
   // Use claude CLI with --print to capture output
   const cmd = new Deno.Command("claude", {
     args: [
@@ -46,14 +113,7 @@ export async function executeRealAgent(
       "-p", prompt,
     ],
     cwd: config.workDir,
-    env: {
-      ...Deno.env.toObject(),
-      PAYDIRT_CLAIM: testClaimId,
-      PAYDIRT_BIN: config.paydirtBin,
-      PAYDIRT_PROSPECT: test.scenario.agent,
-      // Disable hooks during testing to avoid side effects
-      PAYDIRT_HOOK_SYNC: "1",
-    },
+    env,
     stdout: "piped",
     stderr: "piped",
   });
