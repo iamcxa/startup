@@ -44,12 +44,12 @@ export async function executeRealAgent(
             agent: test.scenario.agent,
             prompt: test.scenario.input,
           },
-          sessionId: config.langfuseSessionId,
           metadata: {
-            testId: test.id,
+            sessionId: config.langfuseSessionId,
+            testName: test.scenario.name,
             agent: test.scenario.agent,
+            tags: ["bq-test", test.scenario.agent],
           },
-          tags: ["bq-test", test.scenario.agent],
         });
 
         const result = await executeAgentProcess(test, config);
