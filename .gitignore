@@ -13,8 +13,8 @@ dist/
 paydirt-binary
 
 # Compiled binaries
-startup
-st
+/startup
+/st
 
 # Local
 *.local.*

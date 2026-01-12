@@ -14,14 +14,14 @@ import {
   generateStatusScriptContent,
   generateWelcomeScript,
   writeMprocsConfig,
-} from '../../src/paydirt/boomtown/mprocs.ts';
-import { generateCampBossScriptContent } from '../../src/paydirt/boomtown/camp-boss-pane.ts';
+} from '../../src/startup/boomtown/mprocs.ts';
+import { generateCampBossScriptContent } from '../../src/startup/boomtown/camp-boss-pane.ts';
 import {
   type CaravanInfo,
   mapCaravansToDashboard,
   RELOAD_TRIGGER_FILE,
   requestDashboardReload,
-} from '../../src/paydirt/boomtown/dashboard.ts';
+} from '../../src/startup/boomtown/dashboard.ts';
 
 // ============================================================================
 // mprocs Configuration Integration Tests
@@ -39,8 +39,8 @@ Deno.test('mprocs config includes all required sections', () => {
   );
 
   // Required sections as per spec
-  // Note: PAYDIRT is rendered as ASCII art banner (block letters)
-  assertStringIncludes(config, '██████╗'); // Part of PAYDIRT ASCII art banner
+  // Note: STARTUP is rendered as ASCII art banner (block letters)
+  assertStringIncludes(config, '██████╗'); // Part of STARTUP ASCII art banner
   assertStringIncludes(config, 'BOOMTOWN');
   assertStringIncludes(config, 'proc_list_width');
   assertStringIncludes(config, 'scrollback');
@@ -93,7 +93,7 @@ Deno.test('mprocs config excludes welcome pane when Caravans exist', () => {
 Deno.test('Control Room status script includes Gold Rush branding', () => {
   const script = generateStatusScriptContent();
 
-  assertStringIncludes(script, 'PAYDIRT');
+  assertStringIncludes(script, 'STARTUP');
   assertStringIncludes(script, 'BOOMTOWN');
   assertStringIncludes(script, 'Assay Office');
 });
@@ -124,10 +124,10 @@ Deno.test('Caravan pane script includes correct session name', () => {
     'pd-abc123',
     'Test Caravan',
     'running',
-    '/usr/bin/paydirt',
+    '/usr/bin/startup',
   );
 
-  assertStringIncludes(script, 'SESSION_NAME="paydirt-pd-abc123"');
+  assertStringIncludes(script, 'SESSION_NAME="startup-pd-abc123"');
   assertStringIncludes(script, 'CARAVAN_ID="pd-abc123"');
 });
 
@@ -137,7 +137,7 @@ Deno.test('Caravan pane script includes start functionality', () => {
     'pd-001',
     'Test Caravan',
     'running',
-    '/bin/paydirt',
+    '/bin/startup',
   );
   assertStringIncludes(script, 'START');
   assertStringIncludes(script, 'start_caravan');
@@ -145,7 +145,7 @@ Deno.test('Caravan pane script includes start functionality', () => {
 });
 
 Deno.test('Caravan pane script includes tmux attach logic', () => {
-  const script = generateCaravanScriptContent('pd-001', 'Test', 'running', '/bin/paydirt');
+  const script = generateCaravanScriptContent('pd-001', 'Test', 'running', '/bin/startup');
 
   assertStringIncludes(script, 'tmux has-session');
   assertStringIncludes(script, 'tmux attach');
@@ -157,31 +157,31 @@ Deno.test('Caravan pane script includes tmux attach logic', () => {
 
 Deno.test('Camp Boss script includes Gold Rush branding', () => {
   const script = generateCampBossScriptContent(
-    '/usr/bin/paydirt',
+    '/usr/bin/startup',
     '/path/to/camp-boss.md',
     '/project/root',
   );
 
-  assertStringIncludes(script, 'PAYDIRT');
+  assertStringIncludes(script, 'STARTUP');
   assertStringIncludes(script, 'BOOMTOWN');
   assertStringIncludes(script, 'CAMP BOSS');
 });
 
 Deno.test('Camp Boss script includes session management', () => {
   const script = generateCampBossScriptContent(
-    '/usr/bin/paydirt',
+    '/usr/bin/startup',
     '/path/to/camp-boss.md',
     '/project/root',
   );
 
-  assertStringIncludes(script, 'SESSION_NAME="paydirt-camp-boss"');
+  assertStringIncludes(script, 'SESSION_NAME="startup-camp-boss"');
   assertStringIncludes(script, 'tmux new-session');
   assertStringIncludes(script, 'tmux attach');
 });
 
 Deno.test('Camp Boss script includes Claude Code launch', () => {
   const script = generateCampBossScriptContent(
-    '/usr/bin/paydirt',
+    '/usr/bin/startup',
     '/path/to/camp-boss.md',
     '/project/root',
   );
@@ -215,7 +215,7 @@ Deno.test('mapCaravansToDashboard correctly combines status info', () => {
     },
   ];
   // pd-001 has an active tmux session, pd-002 does not
-  const tmuxSessions = ['paydirt-pd-001'];
+  const tmuxSessions = ['startup-pd-001'];
 
   const result = mapCaravansToDashboard(caravans, tmuxSessions);
 
@@ -271,9 +271,9 @@ Deno.test('writeMprocsConfig creates temp directory with all scripts', async () 
   const caravans: DashboardCaravanInfo[] = [
     { id: 'pd-001', name: 'Test Caravan 1', status: 'running' },
   ];
-  const paydirtPath = '/usr/local/bin/paydirt';
+  const startupPath = '/usr/local/bin/startup';
 
-  const configPath = await writeMprocsConfig(caravans, paydirtPath);
+  const configPath = await writeMprocsConfig(caravans, startupPath);
 
   // Verify config file exists
   const configStat = await Deno.stat(configPath);
@@ -300,9 +300,9 @@ Deno.test('generated scripts are executable', async () => {
   const caravans: DashboardCaravanInfo[] = [
     { id: 'pd-002', name: 'Executable Test', status: 'idle' },
   ];
-  const paydirtPath = '/usr/local/bin/paydirt';
+  const startupPath = '/usr/local/bin/startup';
 
-  const configPath = await writeMprocsConfig(caravans, paydirtPath);
+  const configPath = await writeMprocsConfig(caravans, startupPath);
   const tempDir = configPath.substring(0, configPath.lastIndexOf('/'));
 
   // Check control-room.sh is executable
@@ -330,13 +330,13 @@ Deno.test('welcome script includes all available operations', () => {
   const script = generateWelcomeScript();
 
   // Required content from spec
-  // Note: PAYDIRT is rendered as ASCII art banner (block letters), verify via character pattern
-  assertStringIncludes(script, '██████╗'); // Part of PAYDIRT ASCII art banner
+  // Note: STARTUP is rendered as ASCII art banner (block letters), verify via character pattern
+  assertStringIncludes(script, '██████╗'); // Part of STARTUP ASCII art banner
   assertStringIncludes(script, 'WELCOME TO BOOMTOWN');
   assertStringIncludes(script, 'START NEW CARAVAN');
-  assertStringIncludes(script, 'paydirt stake');
+  assertStringIncludes(script, 'startup call');
   assertStringIncludes(script, 'RESUME EXISTING CARAVAN');
-  assertStringIncludes(script, 'paydirt continue');
+  assertStringIncludes(script, 'startup continue');
   assertStringIncludes(script, 'LIST ALL CARAVANS');
-  assertStringIncludes(script, 'paydirt survey');
+  assertStringIncludes(script, 'startup survey');
 });

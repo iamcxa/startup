@@ -107,7 +107,7 @@ Deno.test('hook script - ignores bd commands that are not comments add', async (
 
 Deno.test('dispatcher - QUESTION triggers claim-agent spawn', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('QUESTION: Which database should we use?');
@@ -121,7 +121,7 @@ Deno.test('dispatcher - QUESTION triggers claim-agent spawn', async () => {
 
 Deno.test('dispatcher - SPAWN triggers specified role spawn', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('SPAWN: surveyor --task "Design authentication"');
@@ -135,7 +135,7 @@ Deno.test('dispatcher - SPAWN triggers specified role spawn', async () => {
 
 Deno.test('dispatcher - ANSWER triggers notify', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('ANSWER: Use PostgreSQL for the database');
@@ -148,7 +148,7 @@ Deno.test('dispatcher - ANSWER triggers notify', async () => {
 
 Deno.test('dispatcher - OUTPUT triggers notify', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('OUTPUT: design=docs/plans/auth-design.md');
@@ -160,7 +160,7 @@ Deno.test('dispatcher - OUTPUT triggers notify', async () => {
 
 Deno.test('dispatcher - PROGRESS triggers log', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('PROGRESS: 3/5 tasks completed');
@@ -172,7 +172,7 @@ Deno.test('dispatcher - PROGRESS triggers log', async () => {
 
 Deno.test('dispatcher - DECISION triggers log', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('DECISION: caravan=pd-123 Q: Which DB? A: PostgreSQL');
@@ -184,7 +184,7 @@ Deno.test('dispatcher - DECISION triggers log', async () => {
 
 Deno.test('dispatcher - CHECKPOINT triggers log', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('CHECKPOINT: Phase 1 complete');
@@ -196,7 +196,7 @@ Deno.test('dispatcher - CHECKPOINT triggers log', async () => {
 
 Deno.test('dispatcher - unknown prefix returns none action', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('UNKNOWN: something');
@@ -208,7 +208,7 @@ Deno.test('dispatcher - unknown prefix returns none action', async () => {
 
 Deno.test('dispatcher - non-prefixed text returns none action', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const parsed = parseComment('Just a regular comment without prefix');
@@ -224,7 +224,7 @@ Deno.test('dispatcher - non-prefixed text returns none action', async () => {
 
 Deno.test('parseSpawnCommand - parses role with task', async () => {
   const { parseSpawnCommand } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const result = parseSpawnCommand('surveyor --task "Design the system"');
@@ -234,7 +234,7 @@ Deno.test('parseSpawnCommand - parses role with task', async () => {
 
 Deno.test('parseSpawnCommand - parses role without task', async () => {
   const { parseSpawnCommand } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const result = parseSpawnCommand('miner');
@@ -244,7 +244,7 @@ Deno.test('parseSpawnCommand - parses role without task', async () => {
 
 Deno.test('parseSpawnCommand - handles complex task descriptions', async () => {
   const { parseSpawnCommand } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   const result = parseSpawnCommand('shift-boss --task "Implement OAuth2 with Google and GitHub providers"');

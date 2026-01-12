@@ -20,10 +20,10 @@ interface HookTestResult {
 }
 
 /**
- * Create a mock paydirt binary that captures commands instead of executing them
+ * Create a mock startup binary that captures commands instead of executing them
  */
-async function createMockPaydirt(tempDir: string): Promise<string> {
-  const mockBin = `${tempDir}/mock-paydirt`;
+async function createMockStartup(tempDir: string): Promise<string> {
+  const mockBin = `${tempDir}/mock-startup`;
   const logFile = `${tempDir}/commands.log`;
 
   // Create mock script that logs commands
@@ -48,7 +48,7 @@ async function runHook(
   const tempDir = await Deno.makeTempDir({ prefix: "hook-test-" });
 
   try {
-    const mockBin = await createMockPaydirt(tempDir);
+    const mockBin = await createMockStartup(tempDir);
     const logFile = `${tempDir}/commands.log`;
 
     // Ensure log file exists

@@ -97,7 +97,7 @@ Deno.test({
     // Step 1: Create test caravan
     const claimId = await createClaim('E2E Test Caravan - Full Flow');
     assertExists(claimId, 'Should create claim');
-    const sessionName = `paydirt-${claimId}`;
+    const sessionName = `startup-${claimId}`;
 
     try {
       // Step 2: Trail Boss writes QUESTION
@@ -106,7 +106,7 @@ Deno.test({
 
       // Step 3: Verify QUESTION dispatch would spawn claim-agent
       const { parseComment, getDispatchAction } = await import(
-        '../../src/paydirt/hooks/dispatcher.ts'
+        '../../src/startup/hooks/dispatcher.ts'
       );
 
       const questionParsed = parseComment('QUESTION: Which authentication method should we use?');
@@ -209,7 +209,7 @@ Deno.test({
     try {
 
       const { parseComment, getDispatchAction, parseSpawnCommand } = await import(
-        '../../src/paydirt/hooks/dispatcher.ts'
+        '../../src/startup/hooks/dispatcher.ts'
       );
 
       // Trail Boss spawns Surveyor
@@ -251,7 +251,7 @@ Deno.test({
   sanitizeResources: false,
   async fn() {
     const { ensureLedger, addDecision, getDecisionHistory } = await import(
-      '../../src/paydirt/ledger/mod.ts'
+      '../../src/startup/ledger/mod.ts'
     );
 
     const claimId = await createClaim('E2E Test - Ledger Integration');
@@ -316,7 +316,7 @@ Deno.test({
 
       // Verify dispatch actions
       const { parseComment, getDispatchAction } = await import(
-        '../../src/paydirt/hooks/dispatcher.ts'
+        '../../src/startup/hooks/dispatcher.ts'
       );
 
       const progressAction = getDispatchAction(
@@ -343,13 +343,13 @@ Deno.test({
   sanitizeResources: false,
   async fn() {
     const claimId = await createClaim('E2E Test - Tmux Session');
-    const sessionName = `paydirt-${claimId}`;
+    const sessionName = `startup-${claimId}`;
 
     try {
       // Spawn a prospect (with --background to not attach)
       const cmd = new Deno.Command('deno', {
         args: [
-          'run', '--allow-all', 'paydirt.ts',
+          'run', '--allow-all', 'startup.ts',
           'prospect', 'surveyor',
           '--claim', claimId,
           '--task', 'E2E test task',

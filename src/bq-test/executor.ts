@@ -6,8 +6,8 @@ import type { BehaviorTest } from "./types.ts";
 import type { ActualBehavior } from "./runner.ts";
 
 export interface ExecutorConfig {
-  /** Path to paydirt binary */
-  paydirtBin: string;
+  /** Path to startup binary */
+  startupBin: string;
   /** Working directory for agent execution */
   workDir: string;
   /** Timeout in milliseconds (default: 60000) */
@@ -89,11 +89,11 @@ async function executeAgentProcess(
   // Build environment variables
   const env: Record<string, string> = {
     ...Deno.env.toObject(),
-    PAYDIRT_CLAIM: testClaimId,
-    PAYDIRT_BIN: config.paydirtBin,
-    PAYDIRT_PROSPECT: test.scenario.agent,
+    STARTUP_BD: testClaimId,
+    STARTUP_BIN: config.startupBin,
+    STARTUP_ROLE: test.scenario.agent,
     // Disable hooks during testing to avoid side effects
-    PAYDIRT_HOOK_SYNC: "1",
+    STARTUP_HOOK_SYNC: "1",
   };
 
   if (config.langfuseEnabled) {
@@ -260,7 +260,7 @@ export async function executeProspectAgent(
 
   try {
     // Execute prospect command
-    const cmd = new Deno.Command(config.paydirtBin, {
+    const cmd = new Deno.Command(config.startupBin, {
       args: [
         "prospect",
         test.scenario.agent,
@@ -270,7 +270,7 @@ export async function executeProspectAgent(
       cwd: config.workDir,
       env: {
         ...Deno.env.toObject(),
-        PAYDIRT_HOOK_SYNC: "1",
+        STARTUP_HOOK_SYNC: "1",
       },
       stdout: "piped",
       stderr: "piped",

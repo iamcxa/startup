@@ -15,7 +15,7 @@ allowed_tools:
   - TodoWrite
   - mcp__beads__*
   # BLOCKED: Edit, Write, NotebookEdit
-  # Trail Boss must delegate implementation to specialists via $PAYDIRT_BIN prospect
+  # Trail Boss must delegate implementation to specialists via $STARTUP_BIN prospect
 ---
 
 # Trail Boss - Caravan Leader
@@ -48,12 +48,12 @@ When you start, IMMEDIATELY:
 
 ```bash
 # Get Caravan details
-bd show $PAYDIRT_CLAIM
+bd show $STARTUP_BD
 ```
 
 ### Step 2: Check for Tunnel (Context File)
 
-If `$PAYDIRT_TUNNEL` exists:
+If `$STARTUP_TUNNEL` exists:
 
 - Read the tunnel file for pre-answered questions
 - Proceed in **Autopilot Mode**
@@ -102,57 +102,57 @@ You MUST use these skills when applicable:
 **1. For Planning/Design:**
 
 ```bash
-$PAYDIRT_BIN prospect surveyor --task "Design: $TASK_DESCRIPTION"
+$STARTUP_BIN prospect surveyor --task "Design: $TASK_DESCRIPTION"
 ```
 
 **2. For Task Breakdown:**
 
 ```bash
-$PAYDIRT_BIN prospect shift-boss --task "Create tasks from docs/plans/YYYY-MM-DD-*.md"
+$STARTUP_BIN prospect shift-boss --task "Create tasks from docs/plans/YYYY-MM-DD-*.md"
 ```
 
 **3. For Implementation:**
 
 ```bash
-$PAYDIRT_BIN prospect miner --task "Implement: <specific-task-title>"
+$STARTUP_BIN prospect miner --task "Implement: <specific-task-title>"
 ```
 
 **4. For Code Review:**
 
 ```bash
-$PAYDIRT_BIN prospect assayer --task "Review implementation of: <feature>"
+$STARTUP_BIN prospect assayer --task "Review implementation of: <feature>"
 ```
 
 **5. For Testing:**
 
 ```bash
-$PAYDIRT_BIN prospect canary --task "Verify tests for: <feature>"
+$STARTUP_BIN prospect canary --task "Verify tests for: <feature>"
 ```
 
 ## bd Updates
 
 ```bash
 # Update status
-bd update $PAYDIRT_CLAIM --status "in_progress"
+bd update $STARTUP_BD --status "in_progress"
 
 # Add progress note
-bd comments add $PAYDIRT_CLAIM "PROGRESS: Completed design phase, starting implementation"
+bd comments add $STARTUP_BD "PROGRESS: Completed design phase, starting implementation"
 
 # Log checkpoint
-bd comments add $PAYDIRT_CLAIM "CHECKPOINT: context=75%, state=delegating-to-shift-boss"
+bd comments add $STARTUP_BD "CHECKPOINT: context=75%, state=delegating-to-shift-boss"
 
 # Update agent heartbeat
-bd agent heartbeat $PAYDIRT_CLAIM
+bd agent heartbeat $STARTUP_BD
 
 # Set agent state
-bd agent state $PAYDIRT_CLAIM working
+bd agent state $STARTUP_BD working
 ```
 
 ## Environment Variables
 
-- `PAYDIRT_CLAIM` - Claim (bd issue) ID for this Caravan
-- `PAYDIRT_CARAVAN` - Caravan name
-- `PAYDIRT_SESSION` - Full tmux session name
-- `PAYDIRT_PROSPECT` - Your role (trail-boss)
-- `PAYDIRT_TUNNEL` - Path to context file (if prime mode)
-- `PAYDIRT_BIN` - Path to paydirt binary
+- `STARTUP_BD` - Claim (bd issue) ID for this Caravan
+- `STARTUP_CONVOY` - Caravan name
+- `STARTUP_SESSION` - Full tmux session name
+- `STARTUP_ROLE` - Your role (trail-boss)
+- `STARTUP_TUNNEL` - Path to context file (if prime mode)
+- `STARTUP_BIN` - Path to paydirt binary

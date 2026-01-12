@@ -10,7 +10,7 @@
 import { assertEquals, assertExists, assertStringIncludes } from '@std/assert';
 
 const TEST_CLAIM_ID = 'test-spawn';
-const TEST_SESSION = `paydirt-${TEST_CLAIM_ID}`;
+const TEST_SESSION = `startup-${TEST_CLAIM_ID}`;
 
 // ============================================================================
 // Test Utilities
@@ -103,7 +103,7 @@ Deno.test({
     try {
       const cmd = new Deno.Command('deno', {
         args: [
-          'run', '--allow-all', 'paydirt.ts',
+          'run', '--allow-all', 'startup.ts',
           'prospect', 'surveyor',
           '--claim', TEST_CLAIM_ID,
           '--task', 'Test task',
@@ -141,7 +141,7 @@ Deno.test({
       // Run prospect command with --background to not attach
       const cmd = new Deno.Command('deno', {
         args: [
-          'run', '--allow-all', 'paydirt.ts',
+          'run', '--allow-all', 'startup.ts',
           'prospect', 'surveyor',
           '--claim', TEST_CLAIM_ID,
           '--task', 'Test task',
@@ -192,7 +192,7 @@ Deno.test({
       // Now add a second prospect
       const cmd = new Deno.Command('deno', {
         args: [
-          'run', '--allow-all', 'paydirt.ts',
+          'run', '--allow-all', 'startup.ts',
           'prospect', 'miner',
           '--claim', TEST_CLAIM_ID,
           '--task', 'Second task',
@@ -234,7 +234,7 @@ Deno.test({
   name: 'boss status command works',
   async fn() {
     const cmd = new Deno.Command('deno', {
-      args: ['run', '--allow-all', 'paydirt.ts', 'boss', 'status'],
+      args: ['run', '--allow-all', 'startup.ts', 'boss', 'status'],
       stdout: 'piped',
       stderr: 'piped',
       cwd: Deno.cwd(),
@@ -259,7 +259,7 @@ Deno.test({
 
     try {
       const cmd = new Deno.Command('deno', {
-        args: ['run', '--allow-all', 'paydirt.ts', 'boss', 'start'],
+        args: ['run', '--allow-all', 'startup.ts', 'boss', 'start'],
         stdout: 'piped',
         stderr: 'piped',
         cwd: Deno.cwd(),
@@ -292,7 +292,7 @@ Deno.test({
 
     // Stop the boss
     const cmd = new Deno.Command('deno', {
-      args: ['run', '--allow-all', 'paydirt.ts', 'boss', 'stop'],
+      args: ['run', '--allow-all', 'startup.ts', 'boss', 'stop'],
       stdout: 'piped',
       stderr: 'piped',
       cwd: Deno.cwd(),
@@ -311,7 +311,7 @@ Deno.test({
 // ============================================================================
 
 Deno.test({
-  name: 'list command shows paydirt sessions',
+  name: 'list command shows startup sessions',
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
@@ -322,7 +322,7 @@ Deno.test({
       await createTestSession(TEST_SESSION, 'test-window');
 
       const cmd = new Deno.Command('deno', {
-        args: ['run', '--allow-all', 'paydirt.ts', 'list'],
+        args: ['run', '--allow-all', 'startup.ts', 'list'],
         stdout: 'piped',
         stderr: 'piped',
         cwd: Deno.cwd(),
@@ -342,11 +342,11 @@ Deno.test({
 Deno.test({
   name: 'list command shows helpful message when no sessions',
   async fn() {
-    // Kill all paydirt sessions first
+    // Kill all startup sessions first
     await cleanupTestSession();
     await cleanupTestSession('pd-boss');
 
-    // Kill any other paydirt sessions
+    // Kill any other startup sessions
     const listCmd = new Deno.Command('tmux', {
       args: ['list-sessions', '-F', '#{session_name}'],
       stdout: 'piped',
@@ -355,13 +355,13 @@ Deno.test({
     const { stdout: listStdout } = await listCmd.output();
     const sessions = new TextDecoder().decode(listStdout).trim().split('\n');
     for (const session of sessions) {
-      if (session.startsWith('paydirt-')) {
+      if (session.startsWith('startup-')) {
         await cleanupTestSession(session);
       }
     }
 
     const cmd = new Deno.Command('deno', {
-      args: ['run', '--allow-all', 'paydirt.ts', 'list'],
+      args: ['run', '--allow-all', 'startup.ts', 'list'],
       stdout: 'piped',
       stderr: 'piped',
       cwd: Deno.cwd(),
@@ -371,7 +371,7 @@ Deno.test({
     const output = new TextDecoder().decode(stdout);
 
     // Should show helpful message or session list
-    const hasContent = output.includes('Paydirt') || output.includes('No Paydirt');
+    const hasContent = output.includes('Startup') || output.includes('No Startup');
     assertEquals(hasContent, true, 'Should show some output');
   },
 });
@@ -392,7 +392,7 @@ Deno.test({
       await createTestSession(TEST_SESSION, 'test-window');
 
       const cmd = new Deno.Command('deno', {
-        args: ['run', '--allow-all', 'paydirt.ts', 'attach'],
+        args: ['run', '--allow-all', 'startup.ts', 'attach'],
         stdout: 'piped',
         stderr: 'piped',
         cwd: Deno.cwd(),
@@ -412,10 +412,10 @@ Deno.test({
 Deno.test({
   name: 'attach command shows error for non-existent session',
   async fn() {
-    await cleanupTestSession('paydirt-nonexistent');
+    await cleanupTestSession('startup-nonexistent');
 
     const cmd = new Deno.Command('deno', {
-      args: ['run', '--allow-all', 'paydirt.ts', 'attach', 'nonexistent'],
+      args: ['run', '--allow-all', 'startup.ts', 'attach', 'nonexistent'],
       stdout: 'piped',
       stderr: 'piped',
       cwd: Deno.cwd(),

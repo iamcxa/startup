@@ -12,7 +12,7 @@ Deno.test({
       args: [
         'run',
         '--allow-all',
-        'paydirt.ts',
+        'startup.ts',
         'prospect',
         'surveyor',
         '--claim',

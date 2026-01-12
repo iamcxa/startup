@@ -23,7 +23,7 @@ import { LangfuseSpanProcessor } from '@langfuse/otel';
 
 const VERSION = '0.1.0';
 
-// Role mapping: startup role -> internal paydirt role
+// Role mapping: startup role -> internal role
 const ROLE_MAP: Record<string, string> = {
   'cto': 'camp-boss',
   'engineer': 'miner',
@@ -104,7 +104,7 @@ async function callCommand(role: string, task: string, options: {
   }
 
   // Import and call the existing prospect command
-  const { prospectCommand } = await import('./src/paydirt/cli/mod.ts');
+  const { prospectCommand } = await import('./src/startup/cli/mod.ts');
   await prospectCommand({
     role: internalRole,
     task,

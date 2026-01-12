@@ -11,7 +11,7 @@ import { assertEquals } from '@std/assert';
 
 Deno.test('POC Integration: Hook dispatcher parses bd comments correctly', async () => {
   const { parseComment, getDispatchAction } = await import(
-    '../../src/paydirt/hooks/dispatcher.ts'
+    '../../src/startup/hooks/dispatcher.ts'
   );
 
   // Test QUESTION triggers claim-agent spawn
@@ -35,7 +35,7 @@ Deno.test('POC Integration: Hook dispatcher parses bd comments correctly', async
 
 Deno.test('POC Integration: Boss command returns correct status', async () => {
   const cmd = new Deno.Command('deno', {
-    args: ['run', '--allow-all', 'paydirt.ts', 'boss', 'status'],
+    args: ['run', '--allow-all', 'startup.ts', 'boss', 'status'],
     stdout: 'piped',
     stderr: 'piped',
     cwd: Deno.cwd(),
@@ -50,7 +50,7 @@ Deno.test('POC Integration: Boss command returns correct status', async () => {
 
 Deno.test('POC Integration: List command works without sessions', async () => {
   const cmd = new Deno.Command('deno', {
-    args: ['run', '--allow-all', 'paydirt.ts', 'list'],
+    args: ['run', '--allow-all', 'startup.ts', 'list'],
     stdout: 'piped',
     stderr: 'piped',
     cwd: Deno.cwd(),
@@ -59,7 +59,7 @@ Deno.test('POC Integration: List command works without sessions', async () => {
   const result = await cmd.output();
   const output = new TextDecoder().decode(result.stdout);
 
-  // Should either show sessions or "No Paydirt sessions found"
-  const hasContent = output.includes('Paydirt') || output.includes('No Paydirt sessions');
+  // Should either show sessions or "No Startup sessions found"
+  const hasContent = output.includes('Startup') || output.includes('No Startup sessions');
   assertEquals(hasContent, true);
 });

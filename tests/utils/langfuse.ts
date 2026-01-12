@@ -130,7 +130,7 @@ export async function withTestSpan<T>(
     return await fn();
   }
 
-  const tracer = trace.getTracer("paydirt-e2e-test");
+  const tracer = trace.getTracer("startup-e2e-test");
 
   return await tracer.startActiveSpan(spanName, async (span) => {
     try {
@@ -141,7 +141,7 @@ export async function withTestSpan<T>(
         // Langfuse trace name
         "langfuse.trace.name": context.traceName,
         // Tags for filtering
-        "langfuse.tags": JSON.stringify(["e2e-test", "paydirt"]),
+        "langfuse.tags": JSON.stringify(["e2e-test", "startup"]),
         // Custom attributes
         ...attributes,
       });
@@ -214,7 +214,7 @@ export async function withAgentSpan<T>(
     return result;
   }
 
-  const tracer = trace.getTracer("paydirt-e2e-test");
+  const tracer = trace.getTracer("startup-e2e-test");
 
   return await tracer.startActiveSpan(spanName, async (span) => {
     try {
@@ -222,7 +222,7 @@ export async function withAgentSpan<T>(
       span.setAttributes({
         "langfuse.session.id": context.sessionId,
         "langfuse.trace.name": context.traceName,
-        "langfuse.tags": JSON.stringify(["e2e-test", "agent", "paydirt"]),
+        "langfuse.tags": JSON.stringify(["e2e-test", "agent", "startup"]),
       });
 
       // Set Langfuse observation input (correct attribute name)
@@ -300,7 +300,7 @@ export function traceEvent(
 ): void {
   if (!context.enabled) return;
 
-  const tracer = trace.getTracer("paydirt-e2e-test");
+  const tracer = trace.getTracer("startup-e2e-test");
   const span = tracer.startSpan(eventName);
 
   span.setAttributes({

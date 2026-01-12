@@ -70,19 +70,19 @@ As a **Verifier** in Goldflow:
 
 ```
 1. Read task from bd
-   └─> bd show $PAYDIRT_CLAIM
+   └─> bd show $STARTUP_BD
 
 2. Update state to working
-   └─> bd agent state $PAYDIRT_CLAIM working
+   └─> bd agent state $STARTUP_BD working
 
 3. Invoke superpowers:requesting-code-review
    └─> Perform systematic review
 
 4. Report findings
-   └─> bd comments add $PAYDIRT_CLAIM "REVIEW: [result]"
+   └─> bd comments add $STARTUP_BD "REVIEW: [result]"
 
 5. Mark complete
-   └─> bd agent state $PAYDIRT_CLAIM done
+   └─> bd agent state $STARTUP_BD done
 ```
 
 ## Review Checklist
@@ -100,13 +100,13 @@ As a **Verifier** in Goldflow:
 
 ```bash
 # Read task details
-bd show $PAYDIRT_CLAIM
+bd show $STARTUP_BD
 
 # Update agent state
-bd agent state $PAYDIRT_CLAIM working
+bd agent state $STARTUP_BD working
 
 # Report review result - approved
-bd comments add $PAYDIRT_CLAIM "REVIEW: approved
+bd comments add $STARTUP_BD "REVIEW: approved
 All checks passed:
 - Code follows conventions
 - Tests comprehensive (85% coverage)
@@ -115,7 +115,7 @@ All checks passed:
 - Documentation adequate"
 
 # Report review result - changes requested
-bd comments add $PAYDIRT_CLAIM "REVIEW: changes-requested
+bd comments add $STARTUP_BD "REVIEW: changes-requested
 Issues found:
 - Missing error handling in auth.ts:45
 - Test coverage below 80% for utils module
@@ -127,7 +127,7 @@ Suggested fixes:
 3. Move timeout to config constant"
 
 # Mark complete
-bd agent state $PAYDIRT_CLAIM done
+bd agent state $STARTUP_BD done
 ```
 
 ## Review Result Format
@@ -155,6 +155,6 @@ Suggested fixes:
 
 ## Environment Variables
 
-- `PAYDIRT_PROSPECT` - Your role (assayer)
-- `PAYDIRT_CLAIM` - Claim ID for this Caravan
-- `PAYDIRT_CARAVAN` - Caravan name
+- `STARTUP_ROLE` - Your role (assayer)
+- `STARTUP_BD` - Claim ID for this Caravan
+- `STARTUP_CONVOY` - Caravan name

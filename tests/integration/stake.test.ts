@@ -1,10 +1,10 @@
 // tests/integration/stake.test.ts
 import { assertStringIncludes } from '@std/assert';
 
-Deno.test('paydirt stake --dry-run generates correct command', async () => {
+Deno.test('startup call --dry-run generates correct command', async () => {
   const cmd = new Deno.Command('deno', {
-    args: ['run', '--allow-all', 'paydirt.ts', 'stake', 'Test task', '--dry-run'],
-    cwd: '/Users/kent/Project/gastown_b/paydirt',
+    args: ['run', '--allow-all', 'startup.ts', 'stake', 'Test task', '--dry-run'],
+    cwd: 'Deno.cwd()',
     stdout: 'piped',
     stderr: 'piped',
   });

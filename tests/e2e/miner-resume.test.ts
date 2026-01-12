@@ -13,7 +13,7 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
 
 const WORK_DIR = Deno.cwd();
-const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/startup-dev.sh`;
 const HOOK_SCRIPT = `${WORK_DIR}/hooks/post-tool-use.sh`;
 
 interface TestContext {
@@ -206,7 +206,7 @@ Source: context`,
 async function cleanupTest(ctx: TestContext): Promise<void> {
   await bd(["close", ctx.workIssueId, "--reason", "E2E test cleanup"]).catch(() => {});
   await bd(["close", ctx.decisionIssueId, "--reason", "E2E test cleanup"]).catch(() => {});
-  await killTmuxSession(`paydirt-${ctx.workIssueId}`).catch(() => {});
+  await killTmuxSession(`startup-${ctx.workIssueId}`).catch(() => {});
 }
 
 // ============================================================================
@@ -259,7 +259,7 @@ Deno.test({
       // ====== Step 4: Wait for Miner to be respawned ======
       console.log("\n▶ Step 4: Waiting for Miner to be respawned...");
 
-      const minerSessionName = `paydirt-${ctx.workIssueId}`;
+      const minerSessionName = `startup-${ctx.workIssueId}`;
 
       const minerRespawned = await waitFor(
         () => tmuxSessionExists(minerSessionName),

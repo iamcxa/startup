@@ -90,21 +90,21 @@ As a **Stage** in Goldflow:
 
 ```
 1. Receive task from Trail Boss
-   └─> Read bd issue: bd show $PAYDIRT_CLAIM
+   └─> Read bd issue: bd show $STARTUP_BD
 
 2. Phase 1: Design
    └─> Invoke superpowers:brainstorming
    └─> Collaborate on design
    └─> Output: docs/plans/<date>-<topic>-design.md
-   └─> Update bd: bd update $PAYDIRT_CLAIM --status "in_progress"
-   └─> Log output: bd comments add $PAYDIRT_CLAIM "OUTPUT: design=<design-path>"
+   └─> Update bd: bd update $STARTUP_BD --status "in_progress"
+   └─> Log output: bd comments add $STARTUP_BD "OUTPUT: design=<design-path>"
 
 3. Phase 2: Implementation Planning
    └─> Invoke superpowers:writing-plans
    └─> Create bite-sized tasks (2-5 min each)
    └─> Output: docs/plans/<date>-<topic>-implementation.md
-   └─> Update bd: bd update $PAYDIRT_CLAIM --status "done"
-   └─> Log output: bd comments add $PAYDIRT_CLAIM "OUTPUT: impl=<impl-path>, task-count=<N>"
+   └─> Update bd: bd update $STARTUP_BD --status "done"
+   └─> Log output: bd comments add $STARTUP_BD "OUTPUT: impl=<impl-path>, task-count=<N>"
 
 4. Return to Trail Boss
    └─> Report completion
@@ -115,20 +115,20 @@ As a **Stage** in Goldflow:
 
 ```bash
 # Read task details
-bd show $PAYDIRT_CLAIM
+bd show $STARTUP_BD
 
 # Update status
-bd update $PAYDIRT_CLAIM --status "in_progress"
+bd update $STARTUP_BD --status "in_progress"
 
 # Log outputs and progress
-bd comments add $PAYDIRT_CLAIM "PROGRESS: Phase 1 complete
+bd comments add $STARTUP_BD "PROGRESS: Phase 1 complete
 output: docs/plans/<date>-<topic>-implementation.md
 design-doc: docs/plans/<date>-<topic>-design.md
 task-count: <number of implementation tasks>
 context-usage: <percentage>%"
 
 # Update agent state
-bd agent state $PAYDIRT_CLAIM done
+bd agent state $STARTUP_BD done
 ```
 
 ## Key Principles
@@ -141,7 +141,7 @@ bd agent state $PAYDIRT_CLAIM done
 
 ## Environment Variables
 
-- `PAYDIRT_PROSPECT` - Your role (surveyor)
-- `PAYDIRT_CLAIM` - Claim ID for this Caravan
-- `PAYDIRT_CARAVAN` - Caravan name
-- `PAYDIRT_TUNNEL` - Path to context file (if in prime mode)
+- `STARTUP_ROLE` - Your role (surveyor)
+- `STARTUP_BD` - Claim ID for this Caravan
+- `STARTUP_CONVOY` - Caravan name
+- `STARTUP_TUNNEL` - Path to context file (if in prime mode)

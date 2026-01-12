@@ -11,7 +11,7 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
 
 const WORK_DIR = Deno.cwd();
-const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/startup-dev.sh`;
 const HOOK_SCRIPT = `${WORK_DIR}/hooks/post-tool-use.sh`;
 
 interface TestContext {
@@ -228,7 +228,7 @@ async function cleanupStage1Test(ctx: TestContext): Promise<void> {
   await bd(["close", ctx.workIssueId, ctx.decisionIssueId]).catch(() => {});
 
   // Kill tmux session
-  await killTmuxSession(`paydirt-${ctx.workIssueId}`).catch(() => {});
+  await killTmuxSession(`startup-${ctx.workIssueId}`).catch(() => {});
 
   // Remove test file if exists
   try {
@@ -285,7 +285,7 @@ Deno.test({
 
       // ====== Step 3: Wait for Miner respawn ======
       console.log("\n▶ Step 3: Waiting for Miner respawn...");
-      const minerSession = `paydirt-${ctx.workIssueId}`;
+      const minerSession = `startup-${ctx.workIssueId}`;
       const minerRespawned = await waitFor(
         () => tmuxSessionExists(minerSession),
         `Miner session ${minerSession} exists`,
@@ -461,7 +461,7 @@ async function cleanupStage2Test(ctx: TestContext): Promise<void> {
   await bd(["close", ctx.workIssueId, ctx.decisionIssueId]).catch(() => {});
 
   // Kill tmux session
-  await killTmuxSession(`paydirt-${ctx.workIssueId}`).catch(() => {});
+  await killTmuxSession(`startup-${ctx.workIssueId}`).catch(() => {});
 
   // Remove test file
   try {
@@ -513,7 +513,7 @@ Deno.test({
 
       // ====== Step 3: Wait for Miner respawn ======
       console.log("\n▶ Step 3: Waiting for Miner respawn...");
-      const minerSession = `paydirt-${ctx.workIssueId}`;
+      const minerSession = `startup-${ctx.workIssueId}`;
       const minerRespawned = await waitFor(
         () => tmuxSessionExists(minerSession),
         `Miner session ${minerSession} exists`,

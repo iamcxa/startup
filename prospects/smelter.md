@@ -73,10 +73,10 @@ As a **Verifier** in Goldflow:
 
 ```
 1. Read task from bd
-   └─> bd show $PAYDIRT_CLAIM
+   └─> bd show $STARTUP_BD
 
 2. Update state to working
-   └─> bd agent state $PAYDIRT_CLAIM working
+   └─> bd agent state $STARTUP_BD working
 
 3. Perform security audit against checklist
 
@@ -84,13 +84,13 @@ As a **Verifier** in Goldflow:
    └─> Invoke superpowers:systematic-debugging
 
 5. Report findings
-   └─> bd comments add $PAYDIRT_CLAIM "AUDIT: [result]"
+   └─> bd comments add $STARTUP_BD "AUDIT: [result]"
 
 6. If authorized, apply fixes
    └─> Make targeted edits
 
 7. Mark complete
-   └─> bd agent state $PAYDIRT_CLAIM done
+   └─> bd agent state $STARTUP_BD done
 ```
 
 ## Security Audit Checklist
@@ -121,13 +121,13 @@ As a **Verifier** in Goldflow:
 
 ```bash
 # Read task details
-bd show $PAYDIRT_CLAIM
+bd show $STARTUP_BD
 
 # Update agent state
-bd agent state $PAYDIRT_CLAIM working
+bd agent state $STARTUP_BD working
 
 # Report audit result - pass
-bd comments add $PAYDIRT_CLAIM "AUDIT: pass
+bd comments add $STARTUP_BD "AUDIT: pass
 All security checks passed:
 - No hardcoded secrets
 - Input validation present
@@ -141,7 +141,7 @@ Code quality:
 - Types consistent"
 
 # Report audit result - issues found
-bd comments add $PAYDIRT_CLAIM "AUDIT: issues-found
+bd comments add $STARTUP_BD "AUDIT: issues-found
 Security issues:
 - Hardcoded API key in config.ts:12
 - Missing input validation in user-input.ts:45
@@ -160,7 +160,7 @@ Remaining (need approval):
 - Extract magic number to named constant"
 
 # Mark complete
-bd agent state $PAYDIRT_CLAIM done
+bd agent state $STARTUP_BD done
 ```
 
 ## Audit Result Format
@@ -195,6 +195,6 @@ Remaining (need approval):
 
 ## Environment Variables
 
-- `PAYDIRT_PROSPECT` - Your role (smelter)
-- `PAYDIRT_CLAIM` - Claim ID for this Caravan
-- `PAYDIRT_CARAVAN` - Caravan name
+- `STARTUP_ROLE` - Your role (smelter)
+- `STARTUP_BD` - Claim ID for this Caravan
+- `STARTUP_CONVOY` - Caravan name

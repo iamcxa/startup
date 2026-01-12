@@ -13,7 +13,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { initLangfuseForTest, getLangfuseEnv, withTestSpan, withAgentSpan, traceEvent, type LangfuseTestContext } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
-const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/startup-dev.sh`;
 
 interface TestContext {
   workIssueId: string;
@@ -308,7 +308,7 @@ async function cleanupTest(ctx: TestContext): Promise<void> {
       await bd(["close", ctx.workIssueId], ctx.langfuse).catch(() => {});
 
       // Kill tmux session
-      await killTmuxSession(`paydirt-${ctx.workIssueId}`).catch(() => {});
+      await killTmuxSession(`startup-${ctx.workIssueId}`).catch(() => {});
 
       // Remove test files
       try {
@@ -377,7 +377,7 @@ Deno.test({
     });
 
     const ctx = await setupTest(langfuse);
-    const minerSession = `paydirt-${ctx.workIssueId}`;
+    const minerSession = `startup-${ctx.workIssueId}`;
 
     try {
       // ====== Phase 1: Initial Task ======

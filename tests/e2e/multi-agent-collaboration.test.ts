@@ -16,7 +16,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { initLangfuseForTest, getLangfuseEnv, type LangfuseTestContext } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
-const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/startup-dev.sh`;
 
 interface TestContext {
   workIssueId: string;
@@ -161,7 +161,7 @@ async function cleanupTest(ctx: TestContext): Promise<void> {
   await bd(["close", ctx.workIssueId]).catch(() => {});
 
   // Kill tmux sessions
-  await killTmuxSession(`paydirt-${ctx.workIssueId}`).catch(() => {});
+  await killTmuxSession(`startup-${ctx.workIssueId}`).catch(() => {});
 
   // Remove test file
   try {
@@ -213,7 +213,7 @@ Deno.test({
     console.log("=".repeat(70));
 
     const ctx = await setupTest();
-    const minerSession = `paydirt-${ctx.workIssueId}`;
+    const minerSession = `startup-${ctx.workIssueId}`;
 
     try {
       // ====== Phase 1: Miner Creates Code with Issues ======

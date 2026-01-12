@@ -68,7 +68,7 @@ Deno.test({
   sanitizeResources: false,
   async fn() {
     const claimId = await createTestClaim('E2E Delegation Test');
-    const sessionName = `paydirt-${claimId}`;
+    const sessionName = `startup-${claimId}`;
 
     try {
       // Step 1: Create initial session (simulating Trail Boss)
@@ -80,7 +80,7 @@ Deno.test({
         args: [
           'run',
           '--allow-all',
-          'paydirt.ts',
+          'startup.ts',
           'prospect',
           'surveyor',
           '--claim',
@@ -111,7 +111,7 @@ Deno.test({
         args: [
           'run',
           '--allow-all',
-          'paydirt.ts',
+          'startup.ts',
           'prospect',
           'miner',
           '--claim',
@@ -148,7 +148,7 @@ Deno.test({
   sanitizeResources: false,
   async fn() {
     const claimId = await createTestClaim('E2E New Session Test');
-    const sessionName = `paydirt-${claimId}`;
+    const sessionName = `startup-${claimId}`;
 
     try {
       // Spawn surveyor without existing session
@@ -156,7 +156,7 @@ Deno.test({
         args: [
           'run',
           '--allow-all',
-          'paydirt.ts',
+          'startup.ts',
           'prospect',
           'surveyor',
           '--claim',

@@ -70,10 +70,10 @@ As a **Verifier** in Goldflow:
 
 ```
 1. Read task from bd
-   └─> bd show $PAYDIRT_CLAIM
+   └─> bd show $STARTUP_BD
 
 2. Update state to working
-   └─> bd agent state $PAYDIRT_CLAIM working
+   └─> bd agent state $STARTUP_BD working
 
 3. Invoke superpowers:verification-before-completion
    └─> Run test suites
@@ -85,23 +85,23 @@ As a **Verifier** in Goldflow:
    └─> Verify coverage thresholds met
 
 6. Report results
-   └─> bd comments add $PAYDIRT_CLAIM "TEST-RESULT: [pass/fail]"
+   └─> bd comments add $STARTUP_BD "TEST-RESULT: [pass/fail]"
 
 7. Mark complete
-   └─> bd agent state $PAYDIRT_CLAIM done
+   └─> bd agent state $STARTUP_BD done
 ```
 
 ## bd CLI Commands
 
 ```bash
 # Read task details
-bd show $PAYDIRT_CLAIM
+bd show $STARTUP_BD
 
 # Update agent state
-bd agent state $PAYDIRT_CLAIM working
+bd agent state $STARTUP_BD working
 
 # Report test results - pass
-bd comments add $PAYDIRT_CLAIM "TEST-RESULT: pass
+bd comments add $STARTUP_BD "TEST-RESULT: pass
 coverage: 87%
 tests: 42 passed, 0 failed
 execution-time: 3.2s
@@ -112,7 +112,7 @@ Modules tested:
 - api: 84% coverage"
 
 # Report test results - fail
-bd comments add $PAYDIRT_CLAIM "TEST-RESULT: fail
+bd comments add $STARTUP_BD "TEST-RESULT: fail
 coverage: 75%
 tests: 40 passed, 2 failed
 execution-time: 3.8s
@@ -129,7 +129,7 @@ Coverage gaps:
 - utils.ts: lines 78-85 not covered"
 
 # Mark complete
-bd agent state $PAYDIRT_CLAIM done
+bd agent state $STARTUP_BD done
 ```
 
 ## Test Result Format
@@ -173,6 +173,6 @@ Coverage gaps:
 
 ## Environment Variables
 
-- `PAYDIRT_PROSPECT` - Your role (canary)
-- `PAYDIRT_CLAIM` - Claim ID for this Caravan
-- `PAYDIRT_CARAVAN` - Caravan name
+- `STARTUP_ROLE` - Your role (canary)
+- `STARTUP_BD` - Claim ID for this Caravan
+- `STARTUP_CONVOY` - Caravan name

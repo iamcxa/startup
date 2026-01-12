@@ -11,12 +11,12 @@ import type { BehaviorTest } from "../../src/bq-test/types.ts";
 
 // Get the working directory (project root)
 const WORK_DIR = Deno.cwd();
-const STARTUP_BIN = `${WORK_DIR}/paydirt.ts`;
+const STARTUP_BIN = `${WORK_DIR}/startup.ts`;
 
 // Real mode configuration
 const realConfig: RealModeConfig = {
   executorConfig: {
-    paydirtBin: STARTUP_BIN,
+    startupBin: STARTUP_BIN,
     workDir: WORK_DIR,
     timeout: 120000, // 2 minutes per test
     verbose: true,
@@ -225,7 +225,7 @@ Deno.test({
 // ============================================================================
 
 Deno.test("Real test configuration is valid", () => {
-  assertEquals(typeof realConfig.executorConfig.paydirtBin, "string");
+  assertEquals(typeof realConfig.executorConfig.startupBin, "string");
   assertEquals(typeof realConfig.executorConfig.workDir, "string");
   assertGreater(realConfig.executorConfig.timeout!, 0);
 });

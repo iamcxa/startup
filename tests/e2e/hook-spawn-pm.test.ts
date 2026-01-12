@@ -4,7 +4,7 @@
 // This test verifies the full flow:
 // 1. Create pd:decision issue
 // 2. Trigger Hook (simulating PostToolUse after bd create)
-// 3. Hook spawns real PM Agent via paydirt prospect
+// 3. Hook spawns real PM Agent via startup prospect
 // 4. PM answers and closes the decision issue
 //
 // Run with: RUN_E2E_TESTS=1 deno test tests/e2e/hook-spawn-pm.test.ts --allow-all
@@ -17,7 +17,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 const WORK_DIR = Deno.cwd();
 const HOOK_SCRIPT = `${WORK_DIR}/hooks/post-tool-use.sh`;
 // Use dev wrapper for correct path resolution (compiled binary has path issues)
-const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/startup-dev.sh`;
 
 interface TestContext {
   decisionIssueId: string;
@@ -189,8 +189,8 @@ async function setupTest(): Promise<TestContext> {
   // Add dependency
   await bd(["dep", "add", workIssueId, decisionIssueId]);
 
-  // Session name matches paydirt prospect convention
-  const sessionName = `paydirt-${decisionIssueId}`;
+  // Session name matches startup prospect convention
+  const sessionName = `startup-${decisionIssueId}`;
 
   return {
     decisionIssueId,

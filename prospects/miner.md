@@ -67,56 +67,56 @@ As a **Processor** in Goldflow:
 
 ```
 1. Read your task from bd
-   └─> bd show $PAYDIRT_CLAIM
+   └─> bd show $STARTUP_BD
 
 2. Understand dependencies and requirements
-   └─> Check comments: bd comments $PAYDIRT_CLAIM
+   └─> Check comments: bd comments $STARTUP_BD
 
 3. Update state to working
-   └─> bd agent state $PAYDIRT_CLAIM working
+   └─> bd agent state $STARTUP_BD working
 
 4. Write failing test
 5. Implement minimal code
 6. Verify test passes
 
 7. Update bd with progress
-   └─> bd comments add $PAYDIRT_CLAIM "PROGRESS: 3/5 steps done"
+   └─> bd comments add $STARTUP_BD "PROGRESS: 3/5 steps done"
 
 8. Commit changes
 9. Repeat until task complete
 
 10. Mark complete
-    └─> bd agent state $PAYDIRT_CLAIM done
-    └─> bd update $PAYDIRT_CLAIM --status "done"
+    └─> bd agent state $STARTUP_BD done
+    └─> bd update $STARTUP_BD --status "done"
 ```
 
 ## bd CLI Commands
 
 ```bash
 # Read task details
-bd show $PAYDIRT_CLAIM
+bd show $STARTUP_BD
 
 # List all comments/context
-bd comments $PAYDIRT_CLAIM
+bd comments $STARTUP_BD
 
 # Update progress
-bd comments add $PAYDIRT_CLAIM "PROGRESS: 3/5 steps done
+bd comments add $STARTUP_BD "PROGRESS: 3/5 steps done
 files: src/auth.ts, tests/auth.spec.ts
 context-usage: 45%"
 
 # Update agent state
-bd agent state $PAYDIRT_CLAIM working
-bd agent state $PAYDIRT_CLAIM done
+bd agent state $STARTUP_BD working
+bd agent state $STARTUP_BD done
 
 # Mark task complete
-bd update $PAYDIRT_CLAIM --status "done"
+bd update $STARTUP_BD --status "done"
 ```
 
 ## Environment Variables
 
-- `PAYDIRT_PROSPECT` - Your role (miner)
-- `PAYDIRT_CLAIM` - Claim ID for this Caravan
-- `PAYDIRT_CARAVAN` - Caravan name
+- `STARTUP_ROLE` - Your role (miner)
+- `STARTUP_BD` - Claim ID for this Caravan
+- `STARTUP_CONVOY` - Caravan name
 
 ## Decision Blocking
 
@@ -126,15 +126,15 @@ When you encounter a decision that requires human/PM input:
 # 1. Create a decision issue
 bd create --title "DECISION: <question>" \
           --type task \
-          --label pd:decision \
+          --label st:decision \
           --priority 1
 # Note the returned issue ID, e.g., beads-dec123
 
 # 2. Block your work on the decision
-bd dep add $PAYDIRT_CLAIM beads-dec123
+bd dep add $STARTUP_BD beads-dec123
 
 # 3. Record state for resume
-bd comments add $PAYDIRT_CLAIM "BLOCKED: waiting for beads-dec123
+bd comments add $STARTUP_BD "BLOCKED: waiting for beads-dec123
 resume-task: <what to do after decision>
 resume-context: <where you left off>"
 
@@ -157,11 +157,11 @@ resume-context: <where you left off>"
 When context-usage > 80%:
 
 ```bash
-bd comments add $PAYDIRT_CLAIM "CHECKPOINT: context=85%
+bd comments add $STARTUP_BD "CHECKPOINT: context=85%
 state: implementing step 4/5
 current-file: src/auth.ts:125
 next-action: Complete validateToken function
 pending-respawn: true"
 
-bd agent state $PAYDIRT_CLAIM stuck
+bd agent state $STARTUP_BD stuck
 ```

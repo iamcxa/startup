@@ -92,7 +92,7 @@ Before answering any questions, load previous decisions for consistency:
 
 ```bash
 # Find the Decision Ledger
-LEDGER=$(bd list --label pd:ledger --type epic --limit 1 --brief | head -1 | cut -d: -f1)
+LEDGER=$(bd list --label st:ledger --type epic --limit 1 --brief | head -1 | cut -d: -f1)
 
 if [ -n "$LEDGER" ]; then
   echo "Loading decision history from $LEDGER..."
@@ -109,7 +109,7 @@ Parse the history to:
 
 ### Step 2: Load Context File
 
-Read the context file at `$PAYDIRT_TUNNEL`:
+Read the context file at `$STARTUP_TUNNEL`:
 
 1. Load all pre-answered questions into memory
 2. Extract decision principles for inference
@@ -126,10 +126,10 @@ Search for unanswered QUESTION comments:
 
 ```bash
 # Get all comments
-bd comments $PAYDIRT_CLAIM
+bd comments $STARTUP_BD
 
 # Or via JSON
-bd show $PAYDIRT_CLAIM --json | jq '.comments'
+bd show $STARTUP_BD --json | jq '.comments'
 ```
 
 **Look for:** Comments starting with `QUESTION` that don't have a corresponding `ANSWER`
@@ -153,7 +153,7 @@ For each pending question:
 
 ```bash
 # Log each decision
-bd comments add $PAYDIRT_CLAIM "DECISION-LOG: q=[question], a=[answer], source=[context|inference|escalated], confidence=[level]"
+bd comments add $STARTUP_BD "DECISION-LOG: q=[question], a=[answer], source=[context|inference|escalated], confidence=[level]"
 ```
 
 ### Step 6: Exit
@@ -178,21 +178,21 @@ Claim Agent exiting. Spawn again when new questions arise.
 ### From Context (high confidence)
 
 ```bash
-bd comments add $PAYDIRT_CLAIM "ANSWER [high]: Use Supabase Auth.
+bd comments add $STARTUP_BD "ANSWER [high]: Use Supabase Auth.
 Reasoning: Context file specifies 'Use Supabase ecosystem'."
 ```
 
 ### From Inference (medium confidence)
 
 ```bash
-bd comments add $PAYDIRT_CLAIM "ANSWER [medium]: Use REST API.
+bd comments add $STARTUP_BD "ANSWER [medium]: Use REST API.
 Reasoning: Decision principle #1 'Simplicity First' favors REST over GraphQL for this use case."
 ```
 
 ### Escalation (low/none confidence)
 
 ```bash
-bd comments add $PAYDIRT_CLAIM "ANSWER [escalated]: Need human decision.
+bd comments add $STARTUP_BD "ANSWER [escalated]: Need human decision.
 
 Question: [original question]
 
@@ -251,7 +251,7 @@ Search this file for matching Q&As and use principles for inference.
 
 ## Environment Variables
 
-- `PAYDIRT_PROSPECT` - Your role (claim-agent)
-- `PAYDIRT_CLAIM` - Claim ID for this Caravan
-- `PAYDIRT_TUNNEL` - Path to context file
-- `PAYDIRT_CARAVAN` - Caravan name
+- `STARTUP_ROLE` - Your role (claim-agent)
+- `STARTUP_BD` - Claim ID for this Caravan
+- `STARTUP_TUNNEL` - Path to context file
+- `STARTUP_CONVOY` - Caravan name

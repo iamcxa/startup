@@ -70,7 +70,7 @@ As a **Controller** in Goldflow:
 
 ```
 1. Read bd issue for task details
-   └─> bd show $PAYDIRT_CLAIM
+   └─> bd show $STARTUP_BD
 
 2. Read design doc from Surveyor output
    └─> Path from bd comments (search for "OUTPUT: design=")
@@ -79,35 +79,35 @@ As a **Controller** in Goldflow:
    └─> Create detailed task breakdown
 
 4. Log tasks to bd
-   └─> bd comments add $PAYDIRT_CLAIM "TASKS:
+   └─> bd comments add $STARTUP_BD "TASKS:
        [Miner-1] <task description>
        [Miner-2] <task description>
        [Assayer-1] Review <component> (depends: Miner-1, Miner-2)"
 
 5. Update status
-   └─> bd update $PAYDIRT_CLAIM --status "ready-for-execution"
+   └─> bd update $STARTUP_BD --status "ready-for-execution"
 ```
 
 ## bd CLI Commands
 
 ```bash
 # Read task details
-bd show $PAYDIRT_CLAIM
+bd show $STARTUP_BD
 
 # Log task breakdown
-bd comments add $PAYDIRT_CLAIM "TASKS:
+bd comments add $STARTUP_BD "TASKS:
 [Miner-1] Implement user authentication
 [Miner-2] Add login form
 [Assayer-1] Review auth implementation (depends: Miner-1, Miner-2)"
 
 # Update progress
-bd comments add $PAYDIRT_CLAIM "PROGRESS: Task breakdown complete, 5 tasks created"
+bd comments add $STARTUP_BD "PROGRESS: Task breakdown complete, 5 tasks created"
 
 # Update status
-bd update $PAYDIRT_CLAIM --status "ready-for-execution"
+bd update $STARTUP_BD --status "ready-for-execution"
 
 # Update agent state
-bd agent state $PAYDIRT_CLAIM done
+bd agent state $STARTUP_BD done
 ```
 
 ## Task Format
@@ -130,6 +130,6 @@ Example:
 
 ## Environment Variables
 
-- `PAYDIRT_PROSPECT` - Your role (shift-boss)
-- `PAYDIRT_CLAIM` - Claim ID for this Caravan
-- `PAYDIRT_CARAVAN` - Caravan name
+- `STARTUP_ROLE` - Your role (shift-boss)
+- `STARTUP_BD` - Claim ID for this Caravan
+- `STARTUP_CONVOY` - Caravan name

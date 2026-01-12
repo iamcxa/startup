@@ -78,10 +78,10 @@ Read config or query from environment/bd:
 
 ```bash
 # Check for query in environment
-echo $PAYDIRT_SCOUT_QUERY
+echo $STARTUP_SCOUT_QUERY
 
 # Or read from bd issue
-bd show $PAYDIRT_CLAIM
+bd show $STARTUP_BD
 ```
 
 **Expected query types:**
@@ -222,7 +222,7 @@ After outputting JSON:
 
 ```bash
 # Log fetch result to bd
-bd comments add $PAYDIRT_CLAIM "SCOUT-RESULT:
+bd comments add $STARTUP_BD "SCOUT-RESULT:
 source: [source type]
 items: [count]
 summary: [brief description]
@@ -231,6 +231,6 @@ data-location: [where full data is stored if needed]"
 
 ## Environment Variables
 
-- `PAYDIRT_PROSPECT` - Your role (scout)
-- `PAYDIRT_CLAIM` - Optional claim ID (if called from Caravan context)
-- `PAYDIRT_SCOUT_QUERY` - Query to execute (URL, search term, etc.)
+- `STARTUP_ROLE` - Your role (scout)
+- `STARTUP_BD` - Optional claim ID (if called from Caravan context)
+- `STARTUP_SCOUT_QUERY` - Query to execute (URL, search term, etc.)

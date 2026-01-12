@@ -13,11 +13,11 @@ import { runRealBehaviorTest, type RealModeConfig } from "../../src/bq-test/runn
 import type { BehaviorTest } from "../../src/bq-test/types.ts";
 
 const WORK_DIR = Deno.cwd();
-const STARTUP_BIN = `${WORK_DIR}/paydirt.ts`;
+const STARTUP_BIN = `${WORK_DIR}/startup.ts`;
 
 const realConfig: RealModeConfig = {
   executorConfig: {
-    paydirtBin: STARTUP_BIN,
+    startupBin: STARTUP_BIN,
     workDir: WORK_DIR,
     timeout: 180000, // 3 minutes - Miner may need more time
     verbose: true,

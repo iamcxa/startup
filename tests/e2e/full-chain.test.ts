@@ -17,7 +17,7 @@ import { assertEquals } from "@std/assert";
 import { initLangfuseForTest, getLangfuseEnv } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
-const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/startup-dev.sh`;
 const HOOK_SCRIPT = `${WORK_DIR}/hooks/post-tool-use.sh`;
 
 interface TestContext {
@@ -233,7 +233,7 @@ async function setupTest(): Promise<TestContext> {
     throw new Error(`Failed to create work issue: ${workResult.stdout}`);
   }
 
-  const sessionName = `paydirt-${workIssueId}`;
+  const sessionName = `startup-${workIssueId}`;
 
   return { workIssueId, sessionName };
 }
@@ -254,7 +254,7 @@ async function cleanupTest(ctx: TestContext): Promise<void> {
   // Kill tmux sessions
   await killTmuxSession(ctx.sessionName).catch(() => {});
   for (const decisionId of decisions) {
-    await killTmuxSession(`paydirt-${decisionId}`).catch(() => {});
+    await killTmuxSession(`startup-${decisionId}`).catch(() => {});
   }
 }
 
@@ -350,7 +350,7 @@ Then EXIT. Do NOT implement anything - just create the decision and exit.`,
       }
       assertEquals(hookResult.code, 0, "Hook should exit cleanly");
 
-      const pmSessionName = `paydirt-${decisionId}`;
+      const pmSessionName = `startup-${decisionId}`;
 
       // Wait for PM session to exist
       console.log("\n▶ Phase 5: Waiting for PM session to start...");

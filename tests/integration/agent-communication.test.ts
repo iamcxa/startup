@@ -139,7 +139,7 @@ Deno.test({
 
       // Verify format works with dispatcher
       const { parseComment, getDispatchAction } = await import(
-        '../../src/paydirt/hooks/dispatcher.ts'
+        '../../src/startup/hooks/dispatcher.ts'
       );
 
       // Extract the QUESTION: ... part from the comment
@@ -277,7 +277,7 @@ Deno.test({
 
       // Verify format works with dispatcher
       const { parseComment, parseSpawnCommand, getDispatchAction } = await import(
-        '../../src/paydirt/hooks/dispatcher.ts'
+        '../../src/startup/hooks/dispatcher.ts'
       );
 
       const contentMatch = spawnComment.match(/SPAWN:.+/);

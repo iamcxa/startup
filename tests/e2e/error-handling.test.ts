@@ -14,7 +14,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { initLangfuseForTest, getLangfuseEnv, type LangfuseTestContext } from "../utils/langfuse.ts";
 
 const WORK_DIR = Deno.cwd();
-const STARTUP_BIN = `${WORK_DIR}/scripts/paydirt-dev.sh`;
+const STARTUP_BIN = `${WORK_DIR}/scripts/startup-dev.sh`;
 
 interface TestContext {
   workIssueId: string;
@@ -176,7 +176,7 @@ async function cleanupTest(ctx: TestContext): Promise<void> {
   await bd(["close", ctx.workIssueId, ctx.decisionIssueId]).catch(() => {});
 
   // Kill tmux session
-  await killTmuxSession(`paydirt-${ctx.workIssueId}`).catch(() => {});
+  await killTmuxSession(`startup-${ctx.workIssueId}`).catch(() => {});
 
   console.log("  ✓ Cleanup complete");
 }
@@ -196,7 +196,7 @@ Deno.test({
     console.log("=".repeat(70));
 
     const ctx = await setupTest("PM unable to decide");
-    const minerSession = `paydirt-${ctx.workIssueId}`;
+    const minerSession = `startup-${ctx.workIssueId}`;
 
     try {
       // ====== Setup: Create BLOCKED comment with decision ======
@@ -283,7 +283,7 @@ Deno.test({
     console.log("=".repeat(70));
 
     const ctx = await setupTest("PM answer missing priority");
-    const minerSession = `paydirt-${ctx.workIssueId}`;
+    const minerSession = `startup-${ctx.workIssueId}`;
 
     try {
       // ====== Setup: Create BLOCKED comment ======
@@ -377,7 +377,7 @@ Deno.test({
     console.log("=".repeat(70));
 
     const ctx = await setupTest("Resume task failure");
-    const minerSession = `paydirt-${ctx.workIssueId}`;
+    const minerSession = `startup-${ctx.workIssueId}`;
 
     try {
       // ====== Setup: Create BLOCKED comment with INVALID task ======
