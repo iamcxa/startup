@@ -9,10 +9,10 @@ Deno.test('buildPaydirtEnvVars includes required variables', () => {
     caravanName: 'test-caravan',
   });
 
-  assertEquals(vars.PAYDIRT_PROSPECT, 'trail-boss');
-  assertEquals(vars.PAYDIRT_CLAIM, 'pd-001');
-  assertEquals(vars.PAYDIRT_CARAVAN, 'test-caravan');
-  assertEquals(vars.PAYDIRT_SESSION, 'paydirt-pd-001');
+  assertEquals(vars.STARTUP_ROLE, 'trail-boss');
+  assertEquals(vars.STARTUP_BD, 'pd-001');
+  assertEquals(vars.STARTUP_CONVOY, 'test-caravan');
+  assertEquals(vars.STARTUP_SESSION, 'startup-pd-001');
 });
 
 Deno.test('buildClaudeCommand includes --plugin-dir flag', () => {
@@ -100,7 +100,7 @@ Deno.test('buildClaudeCommand escapes paths with spaces', () => {
 });
 
 Deno.test({
-  name: 'buildClaudeCommand includes PAYDIRT environment variables',
+  name: 'buildClaudeCommand includes STARTUP environment variables',
   fn() {
     const command = buildClaudeCommand({
       role: 'trail-boss',
@@ -112,11 +112,11 @@ Deno.test({
       paydirtBinPath: '/opt/paydirt/paydirt',
     });
 
-    assertStringIncludes(command, 'PAYDIRT_CLAIM=');
+    assertStringIncludes(command, 'STARTUP_BD=');
     assertStringIncludes(command, 'pd-test123');
-    assertStringIncludes(command, 'PAYDIRT_BIN=');
+    assertStringIncludes(command, 'STARTUP_BIN=');
     assertStringIncludes(command, '/opt/paydirt/paydirt');
-    assertStringIncludes(command, 'PAYDIRT_PROSPECT=');
+    assertStringIncludes(command, 'STARTUP_ROLE=');
     assertStringIncludes(command, 'trail-boss');
   },
 });

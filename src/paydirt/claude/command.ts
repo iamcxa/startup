@@ -20,23 +20,23 @@ export interface EnvVarsOptions {
 
 export function buildPaydirtEnvVars(options: EnvVarsOptions): Record<string, string> {
   const vars: Record<string, string> = {
-    PAYDIRT_PROSPECT: options.role,
-    PAYDIRT_CLAIM: options.claimId,
-    PAYDIRT_CARAVAN: options.caravanName,
-    PAYDIRT_SESSION: `paydirt-${options.claimId}`,
+    STARTUP_ROLE: options.role,
+    STARTUP_BD: options.claimId,
+    STARTUP_CONVOY: options.caravanName,
+    STARTUP_SESSION: `startup-${options.claimId}`,
   };
 
   if (options.paydirtBinPath) {
-    vars.PAYDIRT_BIN = options.paydirtBinPath;
+    vars.STARTUP_BIN = options.paydirtBinPath;
   }
   if (options.tunnelPath) {
-    vars.PAYDIRT_TUNNEL = options.tunnelPath;
+    vars.STARTUP_TUNNEL = options.tunnelPath;
   }
   if (options.mayorPaneIndex !== undefined) {
-    vars.PAYDIRT_TRAIL_BOSS_PANE = options.mayorPaneIndex;
+    vars.STARTUP_LEAD_PANE = options.mayorPaneIndex;
   }
   if (options.agentId) {
-    vars.PAYDIRT_AGENT_ID = options.agentId;
+    vars.STARTUP_AGENT_ID = options.agentId;
   }
 
   // Pass Langfuse environment variables to spawned Claude processes
