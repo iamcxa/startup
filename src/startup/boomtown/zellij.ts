@@ -116,12 +116,17 @@ function escapeKdlString(str: string): string {
 // ============================================================================
 
 /**
- * Check if a Zellij session exists.
+ * Session state from zellij list-sessions
+ */
+export type SessionState = 'alive' | 'dead' | 'none';
+
+/**
+ * Check the state of a Zellij session.
  *
  * @param sessionName - Name of the session to check
- * @returns true if session exists, false otherwise
+ * @returns 'alive' if session is running, 'dead' if exited, 'none' if doesn't exist
  */
-export async function sessionExists(sessionName: string): Promise<boolean> {
+export async function getSessionState(sessionName: string): Promise<SessionState> {
   try {
     const command = new Deno.Command('zellij', {
       args: ['list-sessions'],
@@ -131,18 +136,58 @@ export async function sessionExists(sessionName: string): Promise<boolean> {
 
     const output = await command.output();
     if (!output.success) {
-      return false;
+      return 'none';
     }
 
     const sessions = new TextDecoder().decode(output.stdout);
-    // Session list format: "session-name (created ...)" or just "session-name"
     const lines = sessions.trim().split('\n');
-    return lines.some((line) => {
+
+    for (const line of lines) {
+      // Session list format: "session-name" or "session-name (EXITED ...)"
       const name = line.split(/\s+/)[0];
-      return name === sessionName;
-    });
+      if (name === sessionName) {
+        // Check if session is dead (EXITED)
+        if (line.includes('EXITED')) {
+          return 'dead';
+        }
+        return 'alive';
+      }
+    }
+    return 'none';
   } catch {
     // zellij not installed or other error
+    return 'none';
+  }
+}
+
+/**
+ * Check if a Zellij session exists (alive or dead).
+ *
+ * @param sessionName - Name of the session to check
+ * @returns true if session exists, false otherwise
+ */
+export async function sessionExists(sessionName: string): Promise<boolean> {
+  const state = await getSessionState(sessionName);
+  return state !== 'none';
+}
+
+/**
+ * Delete a Zellij session.
+ *
+ * @param sessionName - Name of the session to delete
+ * @returns true if deleted successfully
+ */
+export async function deleteSession(sessionName: string): Promise<boolean> {
+  try {
+    const command = new Deno.Command('zellij', {
+      args: ['delete-session', sessionName],
+      stdout: 'piped',
+      stderr: 'piped',
+    });
+
+    const output = await command.output();
+    return output.success;
+  } catch {
     return false;
   }
 }

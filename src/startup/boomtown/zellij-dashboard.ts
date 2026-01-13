@@ -6,9 +6,10 @@
 
 import {
   STARTUP_SESSION,
-  sessionExists,
+  getSessionState,
   attachSession,
   createSession,
+  deleteSession,
 } from './zellij.ts';
 
 /**
@@ -31,11 +32,18 @@ function getLayoutPath(): string {
 export async function launchZellijBoomtown(): Promise<void> {
   console.log('Launching Startup Dashboard (zellij)...');
 
-  // Check if session already exists
-  if (await sessionExists(STARTUP_SESSION)) {
+  // Check session state
+  const sessionState = await getSessionState(STARTUP_SESSION);
+
+  if (sessionState === 'alive') {
     console.log(`Session ${STARTUP_SESSION} exists, attaching...`);
     await attachSession(STARTUP_SESSION);
     return;
+  }
+
+  if (sessionState === 'dead') {
+    console.log(`Session ${STARTUP_SESSION} is dead, cleaning up...`);
+    await deleteSession(STARTUP_SESSION);
   }
 
   // Get layout path
