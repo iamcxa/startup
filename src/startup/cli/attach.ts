@@ -1,31 +1,18 @@
 // src/startup/cli/attach.ts
 
 /**
- * Attach to a Startup tmux session.
+ * Attach to a Startup Zellij session.
  */
+
+import {
+  attachSession,
+  COMPANY_SESSION,
+  listStartupSessions,
+  sessionIsAlive,
+} from '../boomtown/zellij-session.ts';
 
 export interface AttachOptions {
   target?: string;
-}
-
-/**
- * List all startup tmux sessions.
- */
-async function listStartupSessions(): Promise<string[]> {
-  const cmd = new Deno.Command('tmux', {
-    args: ['list-sessions', '-F', '#{session_name}'],
-    stdout: 'piped',
-    stderr: 'null',
-  });
-
-  const result = await cmd.output();
-  if (!result.success) return [];
-
-  const output = new TextDecoder().decode(result.stdout);
-  return output
-    .trim()
-    .split('\n')
-    .filter((s) => s.startsWith('startup-') || s === 'startup-company');
 }
 
 export async function attachCommand(options: AttachOptions): Promise<void> {
@@ -34,17 +21,19 @@ export async function attachCommand(options: AttachOptions): Promise<void> {
   // If no target, list available sessions
   if (!target) {
     const sessions = await listStartupSessions();
-    if (sessions.length === 0) {
+    const aliveSessions = sessions.filter((s) => s.state === 'alive');
+
+    if (aliveSessions.length === 0) {
       console.log('No Startup sessions found');
-      console.log('Start a Team with: startup kickoff "task"');
-      console.log('Or start Company HQ with: startup company start');
+      console.log('Start with: startup enter');
+      console.log('Or start a Team with: startup stake "task"');
       return;
     }
 
     console.log('Available Startup sessions:');
-    for (const session of sessions) {
-      const label = session === 'startup-company' ? '(Company HQ)' : '(Team)';
-      console.log(`  ${session} ${label}`);
+    for (const session of aliveSessions) {
+      const label = session.name === COMPANY_SESSION ? '(Company HQ)' : '(Team)';
+      console.log(`  ${session.name} ${label}`);
     }
     console.log('');
     console.log('Attach with: startup attach <session-name>');
@@ -54,37 +43,28 @@ export async function attachCommand(options: AttachOptions): Promise<void> {
   // Resolve target to session name
   let sessionName: string;
   if (target === 'company') {
-    sessionName = 'startup-company';
+    sessionName = COMPANY_SESSION;
   } else if (target.startsWith('startup-')) {
     sessionName = target;
   } else {
     sessionName = `startup-${target}`;
   }
 
-  // Check if session exists
-  const cmd = new Deno.Command('tmux', {
-    args: ['has-session', '-t', sessionName],
-    stdout: 'null',
-    stderr: 'null',
-  });
-  const check = await cmd.output();
-
-  if (!check.success) {
-    console.error(`Session not found: ${sessionName}`);
+  // Check if session exists and is alive
+  if (!(await sessionIsAlive(sessionName))) {
+    console.error(`Session not found or not running: ${sessionName}`);
     const sessions = await listStartupSessions();
-    if (sessions.length > 0) {
-      console.log('Available sessions:', sessions.join(', '));
+    const alive = sessions.filter((s) => s.state === 'alive');
+    if (alive.length > 0) {
+      console.log('Available sessions:', alive.map((s) => s.name).join(', '));
     }
     Deno.exit(1);
   }
 
   // Attach to session
-  const attachCmd = new Deno.Command('tmux', {
-    args: ['attach-session', '-t', sessionName],
-    stdin: 'inherit',
-    stdout: 'inherit',
-    stderr: 'inherit',
-  });
+  console.log(`Attaching to ${sessionName}...`);
+  console.log(`  (Press Ctrl+o d to detach)`);
+  console.log(`  (Press Ctrl+s to scroll)\n`);
 
-  await attachCmd.output();
+  await attachSession(sessionName);
 }

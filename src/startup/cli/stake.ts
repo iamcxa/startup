@@ -1,64 +1,30 @@
 // src/startup/cli/stake.ts
+
+/**
+ * Stake command - Create a new Team with Zellij session.
+ * Uses pure Zellij sessions (no tmux).
+ */
+
 import { getStartupBinPath, getStartupInstallDir, getUserProjectDir } from '../paths.ts';
 import { buildClaudeCommand } from '../claude/command.ts';
-import { addCaravanTab, BOOMTOWN_SESSION, sessionExists as zellijSessionExists } from '../boomtown/zellij.ts';
+import {
+  addTabToSession,
+  attachSession,
+  COMPANY_SESSION,
+  createBackgroundSession,
+  deleteSession,
+  escapeKdlString,
+  getSessionState,
+  getTempLayoutPath,
+  sessionIsAlive,
+  writeLayoutFile,
+} from '../boomtown/zellij-session.ts';
 
 export interface StakeOptions {
   task: string;
   primeMode?: boolean;
   tunnelPath?: string;
   dryRun?: boolean;
-}
-
-/**
- * Check if a tmux session exists.
- */
-async function sessionExists(sessionName: string): Promise<boolean> {
-  const cmd = new Deno.Command('tmux', {
-    args: ['has-session', '-t', sessionName],
-    stdout: 'null',
-    stderr: 'null',
-  });
-  const result = await cmd.output();
-  return result.success;
-}
-
-/**
- * Create a tmux session and run Claude Code in it.
- */
-async function createTmuxSession(
-  sessionName: string,
-  claudeCommand: string,
-  projectDir: string,
-): Promise<boolean> {
-  // Create detached tmux session with Claude command
-  const cmd = new Deno.Command('tmux', {
-    args: [
-      'new-session',
-      '-d', // detached
-      '-s', sessionName,
-      '-c', projectDir, // working directory
-      claudeCommand,
-    ],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-
-  const result = await cmd.output();
-  return result.success;
-}
-
-/**
- * Attach to an existing tmux session.
- */
-async function attachSession(sessionName: string): Promise<void> {
-  const cmd = new Deno.Command('tmux', {
-    args: ['attach-session', '-t', sessionName],
-    stdin: 'inherit',
-    stdout: 'inherit',
-    stderr: 'inherit',
-  });
-  await cmd.output();
 }
 
 /**
@@ -86,10 +52,14 @@ async function createTeamIssue(task: string): Promise<string | null> {
   const cmd = new Deno.Command('bd', {
     args: [
       'create',
-      '--title', title,
-      '--type', 'task',
-      '--label', 'st:team',
-      '--description', `Team task: ${task}`,
+      '--title',
+      title,
+      '--type',
+      'task',
+      '--label',
+      'st:team',
+      '--description',
+      `Team task: ${task}`,
     ],
     stdout: 'piped',
     stderr: 'piped',
@@ -107,6 +77,31 @@ async function createTeamIssue(task: string): Promise<string | null> {
   const output = new TextDecoder().decode(result.stdout).trim();
   const match = output.match(/Created issue:\s*(\S+)/);
   return match ? match[1] : null;
+}
+
+/**
+ * Generate the Team layout with Claude running directly.
+ */
+function generateTeamLayout(tabName: string, claudeCommand: string, roleName: string): string {
+  return `layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    tab name="${escapeKdlString(tabName)}" focus=true {
+        pane name="${escapeKdlString(roleName)}" {
+            command "bash"
+            args "-c" "${escapeKdlString(claudeCommand)}"
+        }
+    }
+}
+`;
 }
 
 export async function stakeCommand(options: StakeOptions): Promise<void> {
@@ -163,37 +158,56 @@ export async function stakeCommand(options: StakeOptions): Promise<void> {
     startupBinPath: getStartupBinPath(),
   });
 
-  // Check if session already exists
-  if (await sessionExists(sessionName)) {
+  // Check session state
+  const state = await getSessionState(sessionName);
+
+  if (state === 'alive') {
     console.log(`\n⚠ Session "${sessionName}" already exists`);
     console.log('Attaching to existing session...');
     await attachSession(sessionName);
     return;
   }
 
-  // Create tmux session and launch Claude
+  // Clean up dead session if exists
+  if (state === 'dead') {
+    console.log('Cleaning up dead session...');
+    await deleteSession(sessionName);
+  }
+
+  // Create Zellij session and launch Claude directly
   console.log(`\n⛏ Creating Team session: ${sessionName}`);
-  const success = await createTmuxSession(sessionName, command, userProjectDir);
+
+  // Generate layout with Claude running directly
+  const layout = generateTeamLayout(teamName, command, 'lead');
+  const layoutPath = getTempLayoutPath(claimId);
+  await writeLayoutFile(layoutPath, layout);
+
+  // Create background session
+  const success = await createBackgroundSession(sessionName, {
+    layoutPath,
+    cwd: userProjectDir,
+  });
 
   if (!success) {
-    console.error('✗ Failed to create tmux session');
+    console.error('✗ Failed to create Zellij session');
     Deno.exit(1);
   }
 
   // Notify Boomtown dashboard
   await notifyNewTeam(claimId, task);
 
-  // Add team tab to Boomtown (zellij) if running
-  if (await zellijSessionExists(BOOMTOWN_SESSION)) {
-    const added = await addCaravanTab(claimId, teamName);
+  // Add team tab to Company HQ if running
+  if (await sessionIsAlive(COMPANY_SESSION)) {
+    const added = await addTabToSession(COMPANY_SESSION, teamName);
     if (added) {
-      console.log(`✓ Added to Boomtown dashboard`);
+      console.log(`✓ Added tab to Company HQ`);
     }
   }
 
   console.log(`✓ Team started: ${claimId}`);
   console.log(`\n▶ Attaching to session...`);
-  console.log(`  (Press Ctrl+b d to detach)`);
+  console.log(`  (Press Ctrl+o d to detach)`);
+  console.log(`  (Press Ctrl+s to scroll)`);
 
   // Attach to the session
   await attachSession(sessionName);

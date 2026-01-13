@@ -1,8 +1,24 @@
 // src/startup/cli/prospect.ts
+
+/**
+ * Prospect command - Spawn individual agents in Zellij sessions.
+ * Uses pure Zellij sessions (no tmux).
+ */
+
 import type { ProspectRole } from '../../types.ts';
 import { getStartupBinPath, getStartupInstallDir, getUserProjectDir } from '../paths.ts';
 import { buildClaudeCommand } from '../claude/command.ts';
 import { startActiveObservation } from 'npm:@langfuse/tracing@^4.5.1';
+import {
+  addPaneToSession,
+  attachSession,
+  createBackgroundSession,
+  deleteSession,
+  escapeKdlString,
+  getSessionState,
+  getTempLayoutPath,
+  writeLayoutFile,
+} from '../boomtown/zellij-session.ts';
 
 export interface ProspectOptions {
   role: string;
@@ -10,7 +26,7 @@ export interface ProspectOptions {
   claimId?: string;
   dryRun?: boolean;
   background?: boolean;
-  model?: string;  // Model to use (e.g., 'sonnet', 'opus', 'haiku')
+  model?: string; // Model to use (e.g., 'sonnet', 'opus', 'haiku')
 }
 
 const VALID_ROLES: ProspectRole[] = [
@@ -24,16 +40,16 @@ const VALID_ROLES: ProspectRole[] = [
   'smelter',
   'claim-agent',
   'scout',
-  'pm',  // Decision proxy agent
+  'pm', // Decision proxy agent
 ];
 
 // Startup role aliases -> internal role mapping
 const STARTUP_ROLE_MAP: Record<string, ProspectRole> = {
   'cto': 'camp-boss',
   'engineer': 'miner',
-  'designer': 'surveyor',  // Note: 'planner' doesn't exist, use 'surveyor'
-  'lead': 'shift-boss',    // Note: 'foreman' doesn't exist, use 'shift-boss'
-  'qa': 'canary',          // Note: 'witness' doesn't exist, use 'canary'
+  'designer': 'surveyor', // Note: 'planner' doesn't exist, use 'surveyor'
+  'lead': 'shift-boss', // Note: 'foreman' doesn't exist, use 'shift-boss'
+  'qa': 'canary', // Note: 'witness' doesn't exist, use 'canary'
   'reviewer': 'assayer',
   'product': 'pm',
 };
@@ -55,78 +71,28 @@ function resolveRole(role: string): ProspectRole | null {
 }
 
 /**
- * Get startup role name from internal role (for .startup/agents/ lookup).
- * Returns null if the internal role has no startup alias.
+ * Generate a layout for a single agent.
  */
-function getStartupRoleName(internalRole: ProspectRole): string | null {
-  for (const [startupRole, internal] of Object.entries(STARTUP_ROLE_MAP)) {
-    if (internal === internalRole) return startupRole;
-  }
-  return null;
+function generateAgentLayout(tabName: string, claudeCommand: string, paneName: string): string {
+  return `layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    tab name="${escapeKdlString(tabName)}" focus=true {
+        pane name="${escapeKdlString(paneName)}" {
+            command "bash"
+            args "-c" "${escapeKdlString(claudeCommand)}"
+        }
+    }
 }
-
-/**
- * Check if a tmux session exists.
- */
-async function sessionExists(sessionName: string): Promise<boolean> {
-  const cmd = new Deno.Command('tmux', {
-    args: ['has-session', '-t', sessionName],
-    stdout: 'null',
-    stderr: 'null',
-  });
-  const result = await cmd.output();
-  return result.success;
-}
-
-/**
- * Create a new tmux window in existing session.
- */
-async function createTmuxWindow(
-  sessionName: string,
-  windowName: string,
-  command: string,
-  projectDir: string,
-): Promise<boolean> {
-  const cmd = new Deno.Command('tmux', {
-    args: [
-      'new-window',
-      '-t', sessionName,
-      '-n', windowName,
-      '-c', projectDir,
-      command,
-    ],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-
-  const result = await cmd.output();
-  return result.success;
-}
-
-/**
- * Create a new tmux session with a window.
- */
-async function createTmuxSession(
-  sessionName: string,
-  windowName: string,
-  command: string,
-  projectDir: string,
-): Promise<boolean> {
-  const cmd = new Deno.Command('tmux', {
-    args: [
-      'new-session',
-      '-d',
-      '-s', sessionName,
-      '-n', windowName,
-      '-c', projectDir,
-      command,
-    ],
-    stdout: 'piped',
-    stderr: 'piped',
-  });
-
-  const result = await cmd.output();
-  return result.success;
+`;
 }
 
 /**
@@ -192,10 +158,10 @@ async function executeProspect(options: ProspectOptions): Promise<number> {
     userProjectDir,
     prompt,
     startupBinPath: getStartupBinPath(),
-    dangerouslySkipPermissions: true,  // Enable autonomous operation
-    print: background && isOneShotAgent,  // Only one-shot agents use --print
-    model,  // Model to use (e.g., 'sonnet', 'opus', 'haiku')
-    agentPath,  // Use startup agent if available
+    dangerouslySkipPermissions: true, // Enable autonomous operation
+    print: background && isOneShotAgent, // Only one-shot agents use --print
+    model, // Model to use (e.g., 'sonnet', 'opus', 'haiku')
+    agentPath, // Use startup agent if available
   });
 
   if (dryRun) {
@@ -206,20 +172,40 @@ async function executeProspect(options: ProspectOptions): Promise<number> {
 
   // Determine session name - use existing Caravan session if claimId provided
   const sessionName = claimId ? `startup-${claimId}` : `startup-${resolvedClaimId}`;
-  const windowName = prospectRole;
+  const paneName = prospectRole;
 
-  // Check if session exists
-  const hasSession = await sessionExists(sessionName);
+  // Check session state
+  const state = await getSessionState(sessionName);
 
   let success: boolean;
-  if (hasSession) {
-    // Add window to existing session
+
+  if (state === 'alive') {
+    // Add pane to existing session
     console.log(`Adding ${prospectRole} to existing session: ${sessionName}`);
-    success = await createTmuxWindow(sessionName, windowName, claudeCommand, userProjectDir);
+    success = await addPaneToSession(sessionName, claudeCommand, {
+      name: paneName,
+      direction: 'down',
+      cwd: userProjectDir,
+    });
   } else {
+    // Clean up dead session if exists
+    if (state === 'dead') {
+      console.log('Cleaning up dead session...');
+      await deleteSession(sessionName);
+    }
+
     // Create new session
     console.log(`Creating new session: ${sessionName}`);
-    success = await createTmuxSession(sessionName, windowName, claudeCommand, userProjectDir);
+
+    // Generate layout with Claude running directly
+    const layout = generateAgentLayout(caravanName, claudeCommand, paneName);
+    const layoutPath = getTempLayoutPath(resolvedClaimId);
+    await writeLayoutFile(layoutPath, layout);
+
+    success = await createBackgroundSession(sessionName, {
+      layoutPath,
+      cwd: userProjectDir,
+    });
   }
 
   if (!success) {
@@ -232,13 +218,9 @@ async function executeProspect(options: ProspectOptions): Promise<number> {
   // If not background mode, attach to the session
   if (!background) {
     console.log(`Attaching to session...`);
-    const attachCmd = new Deno.Command('tmux', {
-      args: ['attach-session', '-t', sessionName],
-      stdin: 'inherit',
-      stdout: 'inherit',
-      stderr: 'inherit',
-    });
-    await attachCmd.output();
+    console.log(`  (Press Ctrl+o d to detach)`);
+    console.log(`  (Press Ctrl+s to scroll)`);
+    await attachSession(sessionName);
   }
 
   return 0;
@@ -257,27 +239,24 @@ export async function prospectCommand(options: ProspectOptions): Promise<void> {
   }
 
   // Wrap execution with Langfuse observation
-  await startActiveObservation(
-    `prospect-${role}`,
-    async (span) => {
-      // Set span attributes (TypeScript definitions may be incomplete, but runtime supports these)
-      span.update({
-        input: { role, claim: claimId, task },
-        sessionId: Deno.env.get('LANGFUSE_SESSION_ID'),
-        metadata: { claimId },
-        tags: ['prospect', role],
-      } as any);
+  await startActiveObservation(`prospect-${role}`, async (span) => {
+    // Set span attributes (TypeScript definitions may be incomplete, but runtime supports these)
+    span.update({
+      input: { role, claim: claimId, task },
+      sessionId: Deno.env.get('LANGFUSE_SESSION_ID'),
+      metadata: { claimId },
+      tags: ['prospect', role],
+    } as any);
 
-      const exitCode = await executeProspect(options);
+    const exitCode = await executeProspect(options);
 
-      span.update({
-        output: { exitCode },
-        level: exitCode === 0 ? 'DEFAULT' : 'ERROR',
-      });
+    span.update({
+      output: { exitCode },
+      level: exitCode === 0 ? 'DEFAULT' : 'ERROR',
+    });
 
-      if (exitCode !== 0) {
-        Deno.exit(exitCode);
-      }
+    if (exitCode !== 0) {
+      Deno.exit(exitCode);
     }
-  );
+  });
 }

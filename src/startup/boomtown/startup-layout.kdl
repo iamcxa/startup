@@ -1,5 +1,7 @@
 // src/startup/boomtown/startup-layout.kdl
-// Initial layout for Startup dashboard - CTO tab only
+// Fallback layout for Startup dashboard - CTO tab only
+// Note: CLI commands generate layouts dynamically with actual Claude commands.
+// This static layout is used only as a template/fallback.
 
 layout {
     default_tab_template {
@@ -12,12 +14,12 @@ layout {
         }
     }
 
-    // CTO Tab - always present
-    // Note: tab-bar and status-bar are provided by default_tab_template
+    // CTO Tab - awaiting Claude command injection
+    // In production, layouts are generated dynamically by CLI commands
     tab name="CTO" focus=true {
         pane name="CTO" {
             command "bash"
-            args "-c" "while true; do tmux attach-session -t startup-company:cto 2>/dev/null || (echo 'Waiting for CTO session...' && sleep 2); done"
+            args "-c" "echo 'Startup Office - Use startup enter to launch CTO session'; read -p 'Press Enter to exit...'"
         }
     }
 }

@@ -1,16 +1,19 @@
 // src/startup/boomtown/zellij-dashboard.ts
 /**
  * Zellij-based Startup dashboard launcher.
- * Uses dual-layer architecture: Zellij (display) + Tmux (persistence).
+ * Uses pure Zellij sessions (no tmux intermediary).
  */
 
 import {
-  STARTUP_SESSION,
-  getSessionState,
   attachSession,
-  createSession,
+  createBackgroundSession,
   deleteSession,
-} from './zellij.ts';
+  getSessionState,
+  SESSION_PREFIX,
+} from './zellij-session.ts';
+
+/** Session name for the legacy Startup dashboard (deprecated - use startup-company) */
+const STARTUP_SESSION = `${SESSION_PREFIX}dashboard`;
 
 /**
  * Get the path to the startup-layout.kdl file.
@@ -61,12 +64,19 @@ export async function launchZellijBoomtown(): Promise<void> {
   console.log('Creating zellij session...');
   console.log(`Layout: ${layoutPath}`);
 
-  // Create session - blocks until user exits
-  const success = await createSession(STARTUP_SESSION, layoutPath);
+  // Create background session then attach
+  const success = await createBackgroundSession(STARTUP_SESSION, {
+    layoutPath,
+  });
   if (!success) {
     console.error('Failed to create zellij session');
     Deno.exit(1);
   }
 
+  console.log('Attaching to session...');
+  console.log('  (Press Ctrl+o d to detach)');
+  console.log('  (Press Ctrl+s to scroll)\n');
+
+  await attachSession(STARTUP_SESSION);
   console.log('Startup dashboard session ended.');
 }

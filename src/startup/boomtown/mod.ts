@@ -33,22 +33,31 @@ export {
 // Camp Boss pane
 export { generateCampBossScriptContent } from './camp-boss-pane.ts';
 
-// Zellij integration
+// Zellij session management (pure Zellij, no tmux)
 export {
-  addCaravanTab,
-  addRolePaneToTeam,
-  addTeamTab,
+  addPaneToSession,
+  addTabToSession,
   attachSession,
-  BOOMTOWN_SESSION,
-  createSession,
-  CTO_TAB_NAME,
-  CTO_TMUX_SESSION,
-  focusTeamRole,
-  generateBoomtownLayout,
-  listTeamTabs,
-  removeCaravanTab,
+  COMPANY_SESSION,
+  createBackgroundSession,
+  deleteSession,
+  escapeKdlString,
+  generateSimpleLayout,
+  getSessionState,
+  getTabNames,
+  getTempLayoutPath,
+  killSession,
+  listStartupSessions,
+  SESSION_PREFIX,
   sessionExists,
-  STARTUP_SESSION,
+  sessionIsAlive,
+  writeLayoutFile,
+} from './zellij-session.ts';
+
+// Legacy Zellij integration (layout generators)
+export {
+  CTO_TAB_NAME,
+  generateBoomtownLayout,
 } from './zellij.ts';
 
 export { launchZellijBoomtown } from './zellij-dashboard.ts';

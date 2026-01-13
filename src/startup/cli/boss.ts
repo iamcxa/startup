@@ -2,39 +2,26 @@
 
 /**
  * Company HQ daemon management commands.
+ * Uses pure Zellij sessions (no tmux).
  */
 
-const COMPANY_SESSION = 'startup-company';
+import { getStartupBinPath, getStartupInstallDir, getUserProjectDir } from '../paths.ts';
+import { buildClaudeCommand } from '../claude/command.ts';
+import {
+  attachSession,
+  COMPANY_SESSION,
+  createBackgroundSession,
+  deleteSession,
+  escapeKdlString,
+  getSessionState,
+  getTempLayoutPath,
+  killSession,
+  sessionIsAlive,
+  writeLayoutFile,
+} from '../boomtown/zellij-session.ts';
+
 const COMPANY_LOG_LABEL = 'st:company';
 const COMPANY_LOG_TITLE = 'Company HQ Command Log';
-
-/**
- * Check if Company HQ daemon is running.
- */
-async function isDaemonRunning(): Promise<boolean> {
-  const cmd = new Deno.Command('tmux', {
-    args: ['has-session', '-t', COMPANY_SESSION],
-    stdout: 'null',
-    stderr: 'null',
-  });
-  const result = await cmd.output();
-  return result.success;
-}
-
-/**
- * Get startup binary path for spawning.
- */
-function getStartupBin(): string {
-  // Check for compiled binary first
-  const cwdBin = `${Deno.cwd()}/startup`;
-  try {
-    Deno.statSync(cwdBin);
-    return cwdBin;
-  } catch {
-    // Fall back to script
-    return `deno run --allow-all ${Deno.cwd()}/startup.ts`;
-  }
-}
 
 /**
  * Find or create the Company HQ command log issue.
@@ -60,9 +47,12 @@ async function ensureCompanyLog(): Promise<string | null> {
   const createCmd = new Deno.Command('bd', {
     args: [
       'create',
-      '--title', COMPANY_LOG_TITLE,
-      '--type', 'epic',
-      '--label', COMPANY_LOG_LABEL,
+      '--title',
+      COMPANY_LOG_TITLE,
+      '--type',
+      'epic',
+      '--label',
+      COMPANY_LOG_LABEL,
     ],
     stdout: 'piped',
     stderr: 'piped',
@@ -74,6 +64,51 @@ async function ensureCompanyLog(): Promise<string | null> {
   const output = new TextDecoder().decode(createResult.stdout).trim();
   const match = output.match(/Created issue:\s*(\S+)/);
   return match ? match[1] : null;
+}
+
+/**
+ * Build the Claude command for CTO.
+ */
+function buildCtoClaudeCommand(claimId?: string): string {
+  const startupInstallDir = getStartupInstallDir();
+  const userProjectDir = getUserProjectDir();
+
+  return buildClaudeCommand({
+    role: 'camp-boss',
+    claimId: claimId || 'company',
+    caravanName: 'startup-company',
+    startupInstallDir,
+    userProjectDir,
+    prompt: 'You are the CTO. Greet the human and await instructions.',
+    startupBinPath: getStartupBinPath(),
+    dangerouslySkipPermissions: true,
+    agentPath: `${userProjectDir}/.startup/agents/cto.md`,
+  });
+}
+
+/**
+ * Generate the CTO layout with Claude running directly.
+ */
+function generateCtoLayout(claudeCommand: string): string {
+  return `layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    tab name="CTO" focus=true {
+        pane name="CTO" {
+            command "bash"
+            args "-c" "${escapeKdlString(claudeCommand)}"
+        }
+    }
+}
+`;
 }
 
 export interface BossOptions {
@@ -98,9 +133,11 @@ export async function bossCommand(options: BossOptions): Promise<void> {
 }
 
 async function startDaemon(dryRun?: boolean): Promise<void> {
-  if (await isDaemonRunning()) {
+  const state = await getSessionState(COMPANY_SESSION);
+
+  if (state === 'alive') {
     console.log('Company HQ daemon is already running');
-    console.log(`Attach with: tmux attach -t ${COMPANY_SESSION}`);
+    console.log(`Attach with: startup attach company`);
     return;
   }
 
@@ -110,40 +147,37 @@ async function startDaemon(dryRun?: boolean): Promise<void> {
     console.log(`Company log: ${companyLogId}`);
   }
 
-  const startupBin = getStartupBin();
-  const projectDir = Deno.cwd();
-
-  // Build command with company log claim
-  const claimArg = companyLogId ? ` --claim ${companyLogId}` : '';
-  const command = `${startupBin} call cto${claimArg} --background`;
-
   if (dryRun) {
-    console.log('[DRY RUN] Would create tmux session:');
+    console.log('[DRY RUN] Would create Zellij session:');
     console.log(`  Session: ${COMPANY_SESSION}`);
-    console.log(`  Command: ${command}`);
+    console.log(`  CTO Claude running directly in pane`);
     return;
+  }
+
+  // Clean up dead session if exists
+  if (state === 'dead') {
+    console.log('Cleaning up dead session...');
+    await deleteSession(COMPANY_SESSION);
   }
 
   console.log('Starting Company HQ daemon...');
 
-  const cmd = new Deno.Command('tmux', {
-    args: [
-      'new-session',
-      '-d',
-      '-s', COMPANY_SESSION,
-      '-n', 'company',
-      '-c', projectDir,
-      command,
-    ],
-    stdout: 'piped',
-    stderr: 'piped',
+  // Build Claude command and layout
+  const claudeCmd = buildCtoClaudeCommand(companyLogId || undefined);
+  const layout = generateCtoLayout(claudeCmd);
+  const layoutPath = getTempLayoutPath('company');
+
+  // Write layout file
+  await writeLayoutFile(layoutPath, layout);
+
+  // Create background session
+  const success = await createBackgroundSession(COMPANY_SESSION, {
+    layoutPath,
+    cwd: getUserProjectDir(),
   });
 
-  const result = await cmd.output();
-
-  if (!result.success) {
+  if (!success) {
     console.error('Failed to start Company HQ daemon');
-    console.error(new TextDecoder().decode(result.stderr));
     Deno.exit(1);
   }
 
@@ -153,27 +187,21 @@ async function startDaemon(dryRun?: boolean): Promise<void> {
 }
 
 async function stopDaemon(dryRun?: boolean): Promise<void> {
-  if (!(await isDaemonRunning())) {
+  if (!(await sessionIsAlive(COMPANY_SESSION))) {
     console.log('Company HQ daemon is not running');
     return;
   }
 
   if (dryRun) {
-    console.log('[DRY RUN] Would kill tmux session:', COMPANY_SESSION);
+    console.log('[DRY RUN] Would kill Zellij session:', COMPANY_SESSION);
     return;
   }
 
   console.log('Stopping Company HQ daemon...');
 
-  const cmd = new Deno.Command('tmux', {
-    args: ['kill-session', '-t', COMPANY_SESSION],
-    stdout: 'null',
-    stderr: 'piped',
-  });
+  const success = await killSession(COMPANY_SESSION);
 
-  const result = await cmd.output();
-
-  if (!result.success) {
+  if (!success) {
     console.error('Failed to stop Company HQ daemon');
     Deno.exit(1);
   }
@@ -182,11 +210,12 @@ async function stopDaemon(dryRun?: boolean): Promise<void> {
 }
 
 async function showStatus(): Promise<void> {
-  const running = await isDaemonRunning();
+  const state = await getSessionState(COMPANY_SESSION);
+  const running = state === 'alive';
 
   console.log('Company HQ Daemon Status');
   console.log('=======================');
-  console.log(`Status: ${running ? 'RUNNING' : 'STOPPED'}`);
+  console.log(`Status: ${running ? 'RUNNING' : state === 'dead' ? 'DEAD' : 'STOPPED'}`);
   console.log(`Session: ${COMPANY_SESSION}`);
 
   if (running) {
