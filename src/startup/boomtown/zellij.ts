@@ -121,6 +121,14 @@ function escapeKdlString(str: string): string {
 export type SessionState = 'alive' | 'dead' | 'none';
 
 /**
+ * Strip ANSI color codes from a string.
+ */
+function stripAnsi(str: string): string {
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/\x1b\[[0-9;]*m/g, '');
+}
+
+/**
  * Check the state of a Zellij session.
  *
  * @param sessionName - Name of the session to check
@@ -143,11 +151,13 @@ export async function getSessionState(sessionName: string): Promise<SessionState
     const lines = sessions.trim().split('\n');
 
     for (const line of lines) {
-      // Session list format: "session-name" or "session-name (EXITED ...)"
-      const name = line.split(/\s+/)[0];
+      // Strip ANSI color codes for parsing
+      const cleanLine = stripAnsi(line);
+      // Session list format: "session-name [Created ...]" or "session-name [Created ...] (EXITED ...)"
+      const name = cleanLine.split(/\s+/)[0];
       if (name === sessionName) {
         // Check if session is dead (EXITED)
-        if (line.includes('EXITED')) {
+        if (cleanLine.includes('EXITED')) {
           return 'dead';
         }
         return 'alive';
