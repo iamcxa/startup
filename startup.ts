@@ -63,6 +63,7 @@ function printHelp(): void {
 Startup v${VERSION} - Multi-agent orchestrator
 
 Usage:
+  startup enter                    Enter the Startup office (Zellij dashboard)
   startup call <role> "task"       Start an agent
   startup kickoff "task"           Create a team and start collaboration
   startup company start|stop|status Manage company daemon
@@ -150,6 +151,11 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
+    case 'enter': {
+      const { enterCommand } = await import('./src/startup/cli/mod.ts');
+      await enterCommand({ dryRun: args['dry-run'] });
+      break;
+    }
     case 'call': {
       const role = args._[1] as string;
       const task = args._[2] as string;

@@ -7,3 +7,4 @@ export { prospectCommand } from './prospect.ts';
 export { bossCommand } from './boss.ts';
 export { attachCommand } from './attach.ts';
 export { listCommand } from './list.ts';
+export { enterCommand } from './enter.ts';
