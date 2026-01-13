@@ -13,16 +13,11 @@ layout {
     }
 
     // CTO Tab - always present
+    // Note: tab-bar and status-bar are provided by default_tab_template
     tab name="CTO" focus=true {
-        pane size=1 borderless=true {
-            plugin location="zellij:tab-bar"
-        }
         pane name="CTO" {
             command "bash"
             args "-c" "while true; do tmux attach-session -t startup-company:cto 2>/dev/null || (echo 'Waiting for CTO session...' && sleep 2); done"
-        }
-        pane size=2 borderless=true {
-            plugin location="zellij:status-bar"
         }
     }
 }
