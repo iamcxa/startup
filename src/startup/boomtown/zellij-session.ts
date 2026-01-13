@@ -323,6 +323,32 @@ export async function addTabToSession(
 }
 
 /**
+ * Add a new tab with a command to a remote session using `zellij run`.
+ * This creates a tab and runs the command in it directly.
+ *
+ * @param session - Target session name
+ * @param tabName - Name for the new tab
+ * @param command - Command to run in the new tab
+ * @param cwd - Optional working directory
+ * @returns true if successful
+ */
+export async function addTabWithCommand(
+  session: string,
+  tabName: string,
+  command: string,
+  cwd?: string,
+): Promise<boolean> {
+  const args = ['run', '--in-place', '--name', tabName];
+  if (cwd) {
+    args.push('--cwd', cwd);
+  }
+  args.push('--', 'bash', '-c', command);
+
+  const result = await runZellij(args, { session });
+  return result.success;
+}
+
+/**
  * Add a new pane to a remote session and run a command in it.
  *
  * @param session - Target session name
@@ -350,8 +376,8 @@ export async function addPaneToSession(
     args.push('--close-on-exit');
   }
 
-  // Add command separator and command
-  args.push('--', command);
+  // Add command separator and command (use bash -c to parse the command string)
+  args.push('--', 'bash', '-c', command);
 
   return executeAction(session, 'new-pane', args);
 }

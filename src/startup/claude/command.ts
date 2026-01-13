@@ -16,6 +16,7 @@ export interface EnvVarsOptions {
   mayorPaneIndex?: string;
   agentId?: string;
   startupBinPath?: string;
+  agentPath?: string;
 }
 
 export function buildStartupEnvVars(options: EnvVarsOptions): Record<string, string> {
@@ -37,6 +38,9 @@ export function buildStartupEnvVars(options: EnvVarsOptions): Record<string, str
   }
   if (options.agentId) {
     vars.STARTUP_AGENT_ID = options.agentId;
+  }
+  if (options.agentPath) {
+    vars.STARTUP_AGENT_PATH = options.agentPath;
   }
 
   // Pass Langfuse environment variables to spawned Claude processes
